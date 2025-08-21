@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 import sys
+import asyncio
 import warnings
 
+from pathlib import Path
 from datetime import datetime
 
 from agentic_job_search.crew import AgenticJobSearch
+from src.scrape import scrape_orgs
+from src.agentic_job_search import log
+
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
@@ -17,13 +22,14 @@ def run():
     """
     Run the crew.
     """
-    inputs = {
-        'topic': 'AI LLMs',
-        'current_year': str(datetime.now().year)
-    }
+    ORGS_FP = Path('src/agentic_job_search/config/orgs.yaml')
+    DOWNLOAD_FP = Path('src/crawl/')
+    DOWNLOAD_FP.mkdir(exist_ok=True)
+    log.info(f"Scrapting for orgs at '{ORGS_FP}' and store at '{DOWNLOAD_FP}'")
+    asyncio.run(scrape_orgs(ORGS_FP, DOWNLOAD_FP))
 
     try:
-        AgenticJobSearch().crew().kickoff(inputs=inputs)
+        AgenticJobSearch().crew().kickoff()
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 

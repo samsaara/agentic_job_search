@@ -207,4 +207,5 @@ pyrightconfig.json
 
 # Custom
 logs.*
+crawl/
 notebooks/
