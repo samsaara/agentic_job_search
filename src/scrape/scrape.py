@@ -4,33 +4,15 @@ that agents will later access to filter for jobs you like.
 """
 
 import yaml
+import json
 import asyncio
 from pathlib import Path
-from playwright.sync_api import sync_playwright
 from playwright.async_api import async_playwright
-from src.agentic_job_search import log
+from src.config import log, SCRAPE_ORGS_PATH, SCRAPE_DOWNLOAD_PATH
 
 
-def scrape_content(url:str):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        # with browser.new_context() as context:
-        page = browser.new_page()
-        page.goto(url)
-        content = page.content()
-
-    # org = '_'.join(org.split())
-    # file_name = Path(f'/tmp/{org}.txt')
-    # with open(file_name, 'w') as fl:
-    #     fl.write(content)
-    # log.info(f'scraped content written to "{file_name}"')
-    # log.info(f'scraped content written to "{file_name}"')
-    return content
-
-
-async def scrape_orgs(orgs_fp:Path, download_fp:Path, max_concurrence=5):
-
-    with open(orgs_fp) as fl:
+def get_orgs_info(orgs_yml_filepath=SCRAPE_ORGS_PATH):
+    with open(Path(orgs_yml_filepath)) as fl:
         orgs_cfg = yaml.safe_load(fl)
 
     orgs = [
@@ -40,6 +22,13 @@ async def scrape_orgs(orgs_fp:Path, download_fp:Path, max_concurrence=5):
         } for org_name, url in orgs_cfg['orgs'].items()
     ]
 
+    return orgs
+
+
+
+async def scrape_orgs(max_concurrence=5):
+
+    orgs = get_orgs_info()
     semaphore = asyncio.Semaphore(max_concurrence)
 
     async with async_playwright() as p:
@@ -56,8 +45,14 @@ async def scrape_orgs(orgs_fp:Path, download_fp:Path, max_concurrence=5):
                     org = '_'.join(org.split())
                 finally:
                     await page.close()
-                with open(f"{download_fp}/{org}.txt", "w") as fp:
-                    fp.write(content)
+
+                json_content = {
+                    'org': org,
+                    'url': url,
+                    'content': content
+                }
+                with open(f"{SCRAPE_DOWNLOAD_PATH}/{org}.json", "w") as fp:
+                    json.dump(json_content, fp, ensure_ascii=False)
 
         tasks = [scrape(entry['url'], entry['org']) for entry in orgs]
         await asyncio.gather(*tasks)
