@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import warnings
 from time import sleep
-from agentic_job_search.crew import AgenticJobSearch
 
+from agentic_job_search.crew import AgenticJobSearch
 
 warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
 

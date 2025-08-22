@@ -1,11 +1,12 @@
-from typing import Any, List, Optional, Dict, Union
-import time
-
 import os
-from dotenv import load_dotenv
-import requests
+import time
+from typing import Any, Dict, List, Optional, Union
+
 import backoff
+import requests
 from crewai import BaseLLM
+from dotenv import load_dotenv
+
 from src.config import log
 
 load_dotenv()

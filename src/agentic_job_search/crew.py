@@ -1,19 +1,22 @@
 import asyncio
-import pickle
 import json
-from time import time
-from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task, after_kickoff
-from crewai.agents.agent_builder.base_agent import BaseAgent
-from crewai_tools import FileReadTool
-from glob import glob
-from typing import List, Optional
-from src.llms import OpenRouterLLM
 import os
+import pickle
+from glob import glob
+from time import time
+from typing import List, Optional
+
+from crewai import Agent, Crew, Process, Task
+from crewai.agents.agent_builder.base_agent import BaseAgent
+from crewai.project import CrewBase, after_kickoff, agent, crew, task
+from crewai_tools import FileReadTool
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
+
+from src.config import JOB_TOPIC, SCRAPE_DOWNLOAD_PATH, log
+from src.llms import OpenRouterLLM
 from src.scrape.scrape import scrape_orgs
-from src.config import SCRAPE_DOWNLOAD_PATH, JOB_TOPIC, log
+
 load_dotenv()
 
 

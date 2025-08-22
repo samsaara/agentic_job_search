@@ -3,12 +3,14 @@ Scrape the webpages mentioned in `orgs.yaml` and store them in a folder
 that agents will later access to filter for jobs you like.
 """
 
-import yaml
-import json
 import asyncio
+import json
 from pathlib import Path
+
+import yaml
 from playwright.async_api import async_playwright
-from src.config import log, SCRAPE_ORGS_PATH, SCRAPE_DOWNLOAD_PATH
+
+from src.config import SCRAPE_DOWNLOAD_PATH, SCRAPE_ORGS_PATH, log
 
 
 def get_orgs_info(orgs_yml_filepath=SCRAPE_ORGS_PATH):
