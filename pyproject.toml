@@ -11,9 +11,9 @@ dependencies = [
 [project.scripts]
 agentic_job_search = "agentic_job_search.main:run"
 run_crew = "agentic_job_search.main:run"
-train = "agentic_job_search.main:train"
-replay = "agentic_job_search.main:replay"
-test = "agentic_job_search.main:test"
+# train = "agentic_job_search.main:train"
+# replay = "agentic_job_search.main:replay"
+# test = "agentic_job_search.main:test"
 
 [build-system]
 requires = ["hatchling"]
