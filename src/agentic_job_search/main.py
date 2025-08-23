@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import warnings
-from time import sleep
 
+# from tenacity import retry, stop_after_attempt, wait_exponential
 from agentic_job_search.crew import AgenticJobSearch
 
 warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
@@ -11,6 +11,10 @@ warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
+""" @retry(
+        wait=wait_exponential(2, min=4, max=300),
+        stop=stop_after_attempt(3)
+) """
 def run():
     """
     Run the crew.
@@ -22,8 +26,6 @@ def run():
     results = []
     for input_ in inputs:
         results.append(crew.kickoff(inputs=input_))
-        print('sleeping for a minute...')
-        sleep(60)
     # except Exception as e:
         # raise Exception(f"An error occurred while running the crew: {e}")
 
