@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 import pickle
 from glob import glob
 from time import time
@@ -14,17 +13,12 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from src.config import JOB_TOPIC, SCRAPE_DOWNLOAD_PATH, log
-from src.llms import OpenRouterLLM
+from src.llms import CustomCrewLLM
 from src.scrape.scrape import scrape_orgs
 
 load_dotenv()
 
 
-openrouter_llm = OpenRouterLLM(
-    model_name=os.environ['OPENROUTER_MODEL_NAME'],
-    api_key=os.environ['OPENROUTER_API_KEY'],
-    base_url=os.environ['OPENROUTER_API_BASE'],
-)
 
 class Job(BaseModel):
     title: str = Field(..., description="Job Title")
@@ -49,7 +43,7 @@ class AgenticJobSearch:
     def job_researcher(self) -> Agent:
         return Agent(
             config=self.agents_config['job_researcher'], # type: ignore[index]
-            llm=openrouter_llm
+            llm=CustomCrewLLM()
         )
 
     @task
@@ -63,7 +57,7 @@ class AgenticJobSearch:
     def prepare_inputs(self):
         log.debug('preparing inputs')
         asyncio.run(scrape_orgs())
-        text_filepaths = glob(f"{SCRAPE_DOWNLOAD_PATH}/*.json")[1:]
+        text_filepaths = glob(f"{SCRAPE_DOWNLOAD_PATH}/*.json")[::-1]
         # random.shuffle(text_filepaths)
         inputs = []
         for fp in text_filepaths:
@@ -97,6 +91,6 @@ class AgenticJobSearch:
             process=Process.sequential,
             verbose=True,
             output_log_file='logs.json',
-            max_rpm=15,  # OpenRouter Free API Limitation is 20 RPM
+            max_rpm=10,  # OpenRouter Free API Limitation is 20 RPM
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )

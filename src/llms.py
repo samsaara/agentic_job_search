@@ -2,7 +2,6 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Union
 
-import backoff
 import requests
 from crewai import BaseLLM
 from dotenv import load_dotenv
@@ -11,73 +10,69 @@ from src.config import log
 
 load_dotenv()
 
-def raw_llm_call(messages):
-    model_name=os.environ['OPENROUTER_MODEL_NAME']
-    api_key=os.environ['OPENROUTER_API_KEY']
-    base_url=os.environ['OPENROUTER_API_BASE']
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    endpoint = f"{base_url}/chat/completions"
+"""
+from tenacity import (
+    retry,
+    stop_after_delay,
+    retry_if_exception_type,
+    before,
+    after
+)
 
-    if isinstance(messages, str):
-        messages = [{"role": "user", "content": messages}]
+# 1. Module‐level lock
+_call_lock = threading.Lock()
 
-    payload = {
-        'model': model_name,
-        'messages': messages,
+# 2. Timeout for acquiring the lock and for the call overall
+_CALL_TIMEOUT = 30  # seconds
+
+
+def _acquire_lock(retry_state):
+    "Tenacity before-hook: try to acquire lock with timeout."
+    acquired = _call_lock.acquire(timeout=_CALL_TIMEOUT)
+    if not acquired:
+        # If we cannot acquire within timeout, raise to abort
+        raise RuntimeError(f"Timeout acquiring call lock after {_CALL_TIMEOUT}s")
+
+def _release_lock(retry_state):
+    "Tenacity after-hook: always release the lock."
+    if _call_lock.locked():
+        _call_lock.release()
+ """
+
+
+def _get_llm_creds(provider:str='OPENROUTER'):
+    # replace with any provider you like but make sure you have stored its credentials in `.env`
+    # They should all start with this prefix
+    return {
+        'model_name': os.environ.get(f"{provider}_MODEL_NAME"),
+        'api_base': os.environ.get(f"{provider}_API_BASE"),
+        'api_key': os.environ.get(f"{provider}_API_KEY"),
     }
 
-    resp = requests.post(endpoint, headers=headers, json=payload)
-    resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
 
 
-class OpenRouterLLM(BaseLLM):
+class CustomCrewLLM(BaseLLM):
     def __init__(
             self,
             model_name: str,
             api_key: str,
             base_url: str,
-            requests_per_minute: int = 15,
-            temperature: Optional[float] = None):
+            temperature: float = 0.1):
         super().__init__(model=model_name, temperature=temperature)
         self.api_key = api_key
-        self.request_times = []
-        self.requests_per_minute = requests_per_minute
         self.headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
         self.endpoint = f"{base_url}/chat/completions"
 
-
-    def _wait_for_rate_limit(self):
-        now = time.time()
-        # Remove timestamps older than 60 seconds
-        self.request_times = [t for t in self.request_times if now - t < 60]
-
-        # If at RPM limit, wait until we can send another
-        if len(self.request_times) >= self.requests_per_minute:
-            wait_secs = 60 - (now - self.request_times[0]) + 0.5
-            log.info(f"RPM limit reached, sleeping {wait_secs:.1f}s")
-            time.sleep(wait_secs)
-            now = time.time()
-            self.request_times = [t for t in self.request_times if now - t < 60]
-
-        # Record this request
-        self.request_times.append(now)
-
-    @backoff.on_exception(
-        backoff.expo,
-        requests.exceptions.HTTPError,
-        max_tries=5, factor=3,
-        giveup=lambda e: e.response is not None and e.response.status_code != 429,
-    )
-    def _perform_request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Perform the HTTP request, retrying on HTTPError 429 with exponential backoff.
-        """
-        response = requests.post(self.endpoint, json=payload, headers=self.headers, timeout=60)
-        response.raise_for_status()
-        log.debug(f"{response.status_code=}")
-        return response.json()
-
+    """
+    retry(
+            # Stop retrying after overall timeout
+            stop=stop_after_delay(_CALL_TIMEOUT),
+            # Retry only on specific HTTP/network errors
+            retry=retry_if_exception_type((requests.exceptions.RequestException, RuntimeError)),
+            before=_acquire_lock,
+            after=_release_lock,
+            reraise=True
+    )  """
     def call(
         self,
         messages: Union[str, List[Dict[str, str]]],
@@ -87,11 +82,8 @@ class OpenRouterLLM(BaseLLM):
         from_task: Optional[Any] = None,
         from_agent: Optional[Any] = None,
     ) -> Union[str, Any]:
-        log.debug('waiting for rate limit...')
-        self._wait_for_rate_limit()
-        # print(messages)
         log.debug('calling llm...')
-        log.debug(f"{'='*30}\n\n{messages}\n\n{'='*30}")
+        log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
 
@@ -103,9 +95,18 @@ class OpenRouterLLM(BaseLLM):
         if tools and self.supports_function_calling():
             payload["tools"] = tools
 
-        resp = self._perform_request(payload)
-        llm_resp = resp["choices"][0]["message"]["content"]
-        log.debug(f"{'='*30}\n\n{llm_resp=}\n\n{'='*30}")
+        log.debug('sleeping for 10 secs')
+        time.sleep(10)
+        try:
+            response = requests.post(self.endpoint, json=payload, headers=self.headers, timeout=60)
+            response.raise_for_status()
+        except Exception:
+            log.debug(response.content.decode('utf8'))
+            log.debug(f"{response.headers=}\n{response.connection=}\n{response.cookies=}\n{response.elapsed=}\n{response.history}")
+            raise
+        log.debug(f"{response.status_code=}")
+        llm_resp = response.json()["choices"][0]["message"]["content"]
+        log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}")
         return llm_resp
 
     def supports_function_calling(self) -> bool:
@@ -116,3 +117,41 @@ class OpenRouterLLM(BaseLLM):
 
     def get_context_window_size(self) -> int:
         return 262144
+
+
+class CustomLLM:
+    def __init__(self, provider:str = 'OPENROUTER', temperature:float=0.1):
+        self._provider = provider
+        self.temperature = temperature
+        self._set_creds()
+
+    @property
+    def provider(self):
+        return self._provider
+
+    def _set_creds(self):
+        dc = _get_llm_creds(self.provider)
+        self.model_name = dc.get('model_name')
+        self.api_key = dc.get('api_key')
+        self.api_base = dc.get('api_base')
+
+    def change_provider(self, new_provider):
+        self._provider = new_provider
+        self._set_creds()
+
+    def __call__(self, messages):
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+        endpoint = f"{self.api_base}/chat/completions"
+
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+
+        payload = {
+            'model': self.model_name,
+            'messages': messages,
+            'temperature': self.temperature,
+        }
+
+        resp = requests.post(endpoint, headers=headers, json=payload)
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
