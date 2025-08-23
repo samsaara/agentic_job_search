@@ -1,3 +1,7 @@
-orgs:
-  browser_company: https://jobs.ashbyhq.com/The%20Browser%20Company
-  choco: https://jobs.ashbyhq.com/choco
+browser_company:
+  url: https://jobs.ashbyhq.com/The%20Browser%20Company
+  selector: "div._departments_12ylk_345"
+
+choco:
+  url: https://jobs.ashbyhq.com/choco
+  selector: "div._departments_12ylk_345"

@@ -19,9 +19,10 @@ def get_orgs_info(orgs_yml_filepath=SCRAPE_ORGS_PATH):
 
     orgs = [
         {
-            'org'   : org_name,
-            'url'   : url,
-        } for org_name, url in orgs_cfg['orgs'].items()
+            'org'     : org_name,
+            'url'     : vals['url'],
+            'selector': vals.get('selector'),
+        } for org_name, vals in orgs_cfg.items()
     ]
 
     return orgs
@@ -37,26 +38,38 @@ async def scrape_orgs(max_concurrence=5):
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
 
-        async def scrape(url, org):
+        async def scrape(*, org, url, selector):
             log.debug(f'scraping "{url}" of org: "{org}"')
             async with semaphore:
                 page = await context.new_page()
                 try:
                     await page.goto(url)
-                    content = await page.content()
-                    org = '_'.join(org.split())
+                    if selector is not None:
+                        log.debug('waiting for selector')
+                        await page.wait_for_selector(selector)
+                        log.debug('waiting for query selector')
+                        element = await page.query_selector(selector)
+                        if element is not None:
+                            log.debug('getting inner html')
+                            content = await element.inner_html()
+                    else:
+                        content = await page.content()
+                except Exception as e:
+                    msg = f"Couldn't scrape '{url}'. Exception: {e}"
+                    log.exception(msg)
+                    raise
                 finally:
                     await page.close()
 
                 json_content = {
-                    'org': org,
+                    'org': '_'.join(org.lower().split()),
                     'url': url,
                     'content': content
                 }
                 with open(f"{SCRAPE_DOWNLOAD_PATH}/{org}.json", "w") as fp:
                     json.dump(json_content, fp, ensure_ascii=False)
 
-        tasks = [scrape(entry['url'], entry['org']) for entry in orgs]
+        tasks = [scrape(**entry) for entry in orgs]
         await asyncio.gather(*tasks)
 
         await context.close()
