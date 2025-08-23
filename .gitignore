@@ -207,6 +207,7 @@ pyrightconfig.json
 
 # Custom
 logs.*
+jobs.json
 *.pkl
 crawl/
 notebooks/
