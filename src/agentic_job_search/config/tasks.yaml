@@ -2,6 +2,7 @@ extract_job_info:
   description: >
     Using only the tools at your disposal, read the blob of HTML content from the JSON file at "{json_file_path}"
     and extract all job related information related to the industry/sector "{topic}" found exclusively in that blob.
+    Do NOT make up information that you don't find in the JSON file.
   expected_output: >
     a structured pydantic output of all required job related information
   agent: job_researcher
