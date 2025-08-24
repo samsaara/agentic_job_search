@@ -122,9 +122,15 @@ class CustomCrewLLM(BaseLLM):
 
 
 class CustomLLM:
-    def __init__(self, provider:str = 'OPENROUTER', temperature:float=0.1):
+    def __init__(
+        self,
+        provider:str = 'OPENROUTER',
+        temperature:float=0.1,
+        wait_between_requests_seconds:int=5
+    ):
         self._provider = provider
         self.temperature = temperature
+        self.wait = wait_between_requests_seconds
         self._set_creds()
 
     @property
@@ -154,6 +160,18 @@ class CustomLLM:
             'temperature': self.temperature,
         }
 
-        resp = requests.post(endpoint, headers=headers, json=payload)
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"]
+        log.debug('calling llm...')
+        log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
+        log.debug(f'sleeping for {self.wait} secs')
+        sleep(self.wait)
+        try:
+            resp = requests.post(endpoint, json=payload, headers=headers, timeout=60)
+            resp.raise_for_status()
+        except Exception:
+            log.debug(resp.content.decode('utf8'))
+            log.debug(f"{resp.headers=}\n{resp.connection=}\n")
+            raise
+
+        llm_resp = resp.json()["choices"][0]["message"]["content"]
+        log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}")
+        return llm_resp
