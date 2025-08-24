@@ -95,7 +95,7 @@ class ProgrammaticJobSearch:
 
     def get_job_info_from_all_orgs(self):
         results = []
-        for inp in self.inputs[:2]:
+        for inp in self.inputs:
             scrape_fp = inp['json_file_path']
             with open(scrape_fp) as fl:
                 html_content = json.load(fl)['content']
