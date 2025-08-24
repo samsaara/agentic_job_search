@@ -1,5 +1,6 @@
 import os
-import time
+import random
+from time import sleep
 from typing import Any, Dict, List, Optional, Union
 
 import requests
@@ -56,12 +57,12 @@ class CustomCrewLLM(BaseLLM):
             self,
             model_name: str,
             api_key: str,
-            base_url: str,
+            api_base: str,
             temperature: float = 0.1):
         super().__init__(model=model_name, temperature=temperature)
         self.api_key = api_key
         self.headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        self.endpoint = f"{base_url}/chat/completions"
+        self.endpoint = f"{api_base}/chat/completions"
 
     """
     retry(
@@ -95,14 +96,15 @@ class CustomCrewLLM(BaseLLM):
         if tools and self.supports_function_calling():
             payload["tools"] = tools
 
-        log.debug('sleeping for 10 secs')
-        time.sleep(10)
+        wait = random.randint(5, 20)
+        log.debug(f'sleeping for {wait} secs')
+        sleep(wait)
         try:
             response = requests.post(self.endpoint, json=payload, headers=self.headers, timeout=60)
             response.raise_for_status()
         except Exception:
             log.debug(response.content.decode('utf8'))
-            log.debug(f"{response.headers=}\n{response.connection=}\n{response.cookies=}\n{response.elapsed=}\n{response.history}")
+            log.debug(f"{response.headers=}\n{response.connection=}\n")
             raise
         log.debug(f"{response.status_code=}")
         llm_resp = response.json()["choices"][0]["message"]["content"]

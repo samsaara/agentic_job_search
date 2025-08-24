@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 file_handler = logging.FileHandler('logs.log')
 file_handler.setLevel(logging.DEBUG)
@@ -12,5 +13,10 @@ log.addHandler(file_handler)
 
 
 SCRAPE_ORGS_PATH = "src/scrape/orgs.yaml"
-SCRAPE_DOWNLOAD_PATH="src/scrape/crawl"
 JOB_TOPIC = "Data Science | Machine/Deep Learning | NLP/LLMs | AI"
+
+SCRAPE_DOWNLOAD_PATH = Path("src/scrape/crawl")
+JOBS_WRITE_PATH = Path("src/scrape/jobs")
+
+for path in (SCRAPE_DOWNLOAD_PATH, JOBS_WRITE_PATH):
+    path.mkdir(parents=True, exist_ok=True)

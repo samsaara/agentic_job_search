@@ -1,8 +1,13 @@
 #!/usr/bin/env python
+import asyncio
+import json
 import warnings
+from time import time
 
 # from tenacity import retry, stop_after_attempt, wait_exponential
 from agentic_job_search.crew import AgenticJobSearch
+from src.config import JOBS_WRITE_PATH, log
+from src.utils import prepare_inputs
 
 warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
 
@@ -15,56 +20,18 @@ warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
         wait=wait_exponential(2, min=4, max=300),
         stop=stop_after_attempt(3)
 ) """
+async def _run_async():
+    try:
+        inputs = await prepare_inputs(scrape=False)
+        crew = AgenticJobSearch().crew()
+        return await crew.kickoff_for_each_async(inputs=inputs)
+    except Exception as e:
+        raise Exception(f"An error occurred while running the crew: {e}")
+
+
 def run():
-    """
-    Run the crew.
-    """
-    # try:
-    agentic_search_crew = AgenticJobSearch()
-    inputs = agentic_search_crew.prepare_inputs()
-    crew = agentic_search_crew.crew()
-    results = []
-    for input_ in inputs:
-        results.append(crew.kickoff(inputs=input_))
-    # except Exception as e:
-        # raise Exception(f"An error occurred while running the crew: {e}")
-
-
-# def train():
-#     """
-#     Train the crew for a given number of iterations.
-#     """
-#     inputs = {
-#         "topic": "AI LLMs",
-#         'current_year': str(datetime.now().year)
-#     }
-#     try:
-#         AgenticJobSearch().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
-
-#     except Exception as e:
-#         raise Exception(f"An error occurred while training the crew: {e}")
-
-# def replay():
-#     """
-#     Replay the crew execution from a specific task.
-#     """
-#     try:
-#         AgenticJobSearch().crew().replay(task_id=sys.argv[1])
-
-#     except Exception as e:
-#         raise Exception(f"An error occurred while replaying the crew: {e}")
-
-# def test():
-#     """
-#     Test the crew execution and returns the results.
-#     """
-#     inputs = {
-#         "topic": "AI LLMs",
-#         "current_year": str(datetime.now().year)
-#     }
-
-#     try:
-#         AgenticJobSearch().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
-
-#     except Exception as e:
-#         raise Exception(f"An error occurred while testing the crew: {e}")
+    results = asyncio.run(_run_async())
+    FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
+    log.debug(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
+    with open(FINAL_REPORT_PATH, 'w') as fl:
+        json.dump(results, fl)
