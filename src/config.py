@@ -13,7 +13,7 @@ log.addHandler(file_handler)
 
 
 SCRAPE_ORGS_PATH = "src/scrape/orgs.yaml"
-JOB_TOPIC = "Data Science | Machine/Deep Learning | NLP/LLMs | AI"
+JOB_TOPIC = "Data Science or Machine/Deep Learning or NLP/LLMs or AI"
 
 SCRAPE_DOWNLOAD_PATH = Path("src/scrape/crawl")
 JOBS_WRITE_PATH = Path("src/scrape/jobs")
