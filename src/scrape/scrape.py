@@ -45,13 +45,11 @@ async def scrape_orgs(max_concurrence=5):
                 try:
                     await page.goto(url)
                     if selector is not None:
-                        log.debug('waiting for selector')
                         await page.wait_for_selector(selector)
-                        log.debug('waiting for query selector')
-                        element = await page.query_selector(selector)
-                        if element is not None:
+                        entries = await page.query_selector_all(selector)
+                        if len(entries):
                             log.debug('getting inner html')
-                            content = await element.inner_html()
+                            content = ' '.join([await entry.inner_html() for entry in entries])
                     else:
                         content = await page.content()
                 except Exception as e:
