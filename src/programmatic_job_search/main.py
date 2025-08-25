@@ -24,7 +24,12 @@ class ProgrammaticJobSearch:
         self.temperature = temperature
         self.inputs = asyncio.run(prepare_inputs(self.scrape))
         self.llm = CustomLLM(self.provider, self.temperature, wait_between_requests_seconds)
-        self.system_msg = {
+        self._common_msg = ' '.join(f"""
+                Make sure you output nothing else but ONLY a valid json in the earlier requested format without backquotes.
+                Ensure the final output does NOT include any code block markers like ```json or ```python.
+                Return an empty list as a value for `jobs` if there are no jobs in the blob of text related to "{self.topic}".
+        """.split())
+        self._system_msg = {
             'role': 'system',
             'content': ' '.join(f""" \
                 You're a veteran in web content information retrieval and web technologies. \
@@ -43,9 +48,7 @@ class ProgrammaticJobSearch:
                     ]
                 }}
 
-                Ensure the final output does not include any code block markers like ```json or ```python.
-
-                \nMake sure you output nothing else but ONLY a valid json in the above format without backquotes.
+                {self._common_msg}
             """.split())
         }
 
