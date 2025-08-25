@@ -7,9 +7,9 @@ choco:
   selector: "div._departments_12ylk_345"
 
 mozilla:
-  url: https://www.mozilla.org/en-US/careers/listings/?team=Strategy,%20Operations,%20Data%20&%20Ads
-  selector: "table.listings-positions"
+  url: https://www.mozilla.org/en-US/careers/listings/
+  selector: '#listings-positions tbody tr.position[data-team="Strategy, Operations, Data & Ads"]'
 
 buffer:
-  url: https://buffer.com/journey#open-roles
+  url: https://buffer.com/journey
   selector: "div.OpenRolesList_openRolesDepartments__zu6xb"
