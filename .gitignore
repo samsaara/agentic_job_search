@@ -209,6 +209,7 @@ pyrightconfig.json
 logs.*
 jobs.json
 jobs/
+orgs.yaml
 *.pkl
 crawl/
 notebooks/
