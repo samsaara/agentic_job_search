@@ -1,4 +1,5 @@
 import json
+import random
 from glob import glob
 from typing import List, Optional
 
@@ -30,7 +31,7 @@ async def prepare_inputs(scrape:bool=True):
     if scrape:
         await scrape_orgs()
     text_filepaths = glob(f"{SCRAPE_DOWNLOAD_PATH}/*.json")
-    # random.shuffle(text_filepaths)
+    random.shuffle(text_filepaths)
     inputs = []
     for fp in text_filepaths:
         with open(fp) as fl:
