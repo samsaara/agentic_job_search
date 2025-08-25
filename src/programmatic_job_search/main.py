@@ -17,6 +17,7 @@ class ProgrammaticJobSearch:
         provider: str = 'OPENROUTER',
         temperature: float = 0.3,
         wait_between_requests_seconds:int = 15,
+        **payload_kwargs
     ):
         self.topic = topic
         self.scrape = scrape
@@ -24,6 +25,7 @@ class ProgrammaticJobSearch:
         self.temperature = temperature
         self.inputs = asyncio.run(prepare_inputs(self.scrape))
         self.llm = CustomLLM(self.provider, self.temperature, wait_between_requests_seconds)
+        self.payload_kwargs = payload_kwargs
         self._common_msg = ' '.join(f"""
                 Make sure you output nothing else but ONLY a valid json in the earlier requested format without backquotes.
                 Ensure the final output does NOT include any code block markers like ```json or ```python.
@@ -66,7 +68,7 @@ class ProgrammaticJobSearch:
         orig_msg = messages
         INVALID_RESPONSE = True
         while INVALID_RESPONSE:
-            resp = self.llm(messages)
+            resp = self.llm(messages, **self.payload_kwargs)
             try:
                 resp = self._clean_resp(resp)
                 log.debug(f"{': : '*30}\n\n{resp}\n\n{'; ; '*30}")
@@ -89,8 +91,7 @@ class ProgrammaticJobSearch:
                     },
                     {
                         'role': 'user',
-                        'content': f"{msg}. Output only valid JSON without backquotes in the format requested earlier."
-                                    " Ensure the final output does not include any code block markers like ```json or ```python."
+                        'content': f"{msg}\n\n{self._common_msg}"
                     }
                 ])
         return model
@@ -103,7 +104,7 @@ class ProgrammaticJobSearch:
             with open(scrape_fp) as fl:
                 html_content = json.load(fl)['content']
             messages = [
-                self.system_msg,
+                self._system_msg,
                 {
                     'role': 'user',
                     'content': html_content
@@ -122,11 +123,11 @@ class ProgrammaticJobSearch:
         FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
         log.debug(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
         with open(FINAL_REPORT_PATH, 'w') as fl:
-            json.dump(results, fl)
+            json.dump(results, fl, sort_keys=True)
 
 
 def run():
-   ps = ProgrammaticJobSearch()
+   ps = ProgrammaticJobSearch(scrape=True, provider='OLLAMA', temperature=.1, wait_between_requests_seconds=2, stream=False)
    ps.get_job_info_from_all_orgs()
 
 

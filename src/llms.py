@@ -126,7 +126,7 @@ class CustomLLM:
         self,
         provider:str = 'OPENROUTER',
         temperature:float=0.1,
-        wait_between_requests_seconds:int=5
+        wait_between_requests_seconds:int=5,
     ):
         self._provider = provider
         self.temperature = temperature
@@ -147,10 +147,7 @@ class CustomLLM:
         self._provider = new_provider
         self._set_creds()
 
-    def __call__(self, messages):
-        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        endpoint = f"{self.api_base}/chat/completions"
-
+    def __call__(self, messages, **payload_kwargs):
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
 
@@ -160,18 +157,34 @@ class CustomLLM:
             'temperature': self.temperature,
         }
 
+        if self.provider != 'OLLAMA':
+            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+            endpoint = f"{self.api_base}/chat/completions"
+        else:
+            headers = None
+            endpoint = f"{self.api_base}/chat"
+            payload.update(**payload_kwargs)
+
+
         log.debug('calling llm...')
         log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
         log.debug(f'sleeping for {self.wait} secs')
         sleep(self.wait)
         try:
-            resp = requests.post(endpoint, json=payload, headers=headers, timeout=60)
+            resp = requests.post(endpoint, json=payload, headers=headers, timeout=1200)
             resp.raise_for_status()
+        except requests.exceptions.ConnectionError:
+            msg = "Make sure you're either connected to the internet or running ollama server if using the latter as provider"
+            log.exception(msg)
+            raise
         except Exception:
             log.debug(resp.content.decode('utf8'))
             log.debug(f"{resp.headers=}\n{resp.connection=}\n")
             raise
 
-        llm_resp = resp.json()["choices"][0]["message"]["content"]
+        if self.provider != 'OLLAMA':
+            llm_resp = resp.json()["choices"][0]["message"]["content"]
+        else:
+            llm_resp = resp.json()['message']['content']
         log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}")
         return llm_resp
