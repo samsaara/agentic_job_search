@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
 ) """
 async def _run_async():
     try:
-        inputs = await prepare_inputs(scrape=False)
+        inputs = await prepare_inputs()
         crew = AgenticJobSearch().crew()
         return await crew.kickoff_for_each_async(inputs=inputs)
     except Exception as e:
