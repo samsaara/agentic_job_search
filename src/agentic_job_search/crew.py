@@ -20,7 +20,7 @@ class AgenticJobSearch:
         super().__init__()
         self.temperature = temperature
         dc = _get_llm_creds(provider)
-        self.llm = CustomCrewLLM(dc['model_name'], dc['api_key'], dc['api_base'])
+        self.llm = CustomCrewLLM(dc['model_name'], dc['api_key'], dc['api_base'], self.temperature)
 
     @agent
     def job_researcher(self) -> Agent:
