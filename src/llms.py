@@ -167,7 +167,7 @@ class CustomLLM:
             payload.update(**payload_kwargs)
 
 
-        log.debug('calling llm...')
+        log.debug(f'calling llm with {payload_kwargs=}...')
         log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
         log.debug(f'sleeping for {self.wait} secs')
         sleep(self.wait)

@@ -134,8 +134,14 @@ class ProgrammaticJobSearch:
 
 
 def run():
-   ps = ProgrammaticJobSearch(scrape=True, provider='OLLAMA', temperature=.1, wait_between_requests_seconds=2, stream=False)
-   ps.get_job_info_from_all_orgs()
+    kwargs = {
+        'scrape': False,
+        'provider': 'OLLAMA',
+        'temperature': 0.1,
+        'wait_between_requests_seconds': .1,
+    }
+    ps = ProgrammaticJobSearch(**kwargs)
+    ps.get_job_info_from_all_orgs()
 
 
 if __name__ == "__main__":
