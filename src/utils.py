@@ -1,6 +1,7 @@
 import json
 import random
 from glob import glob
+from shutil import rmtree
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -53,3 +54,22 @@ def store_jobs_info(results):
     with open(f'{JOBS_WRITE_PATH}/jobs_{org}.json', 'w') as fl:
         json.dump(model_dump, fl)
     return model_dump
+
+
+def cleanup_reports():
+    """delete generated job reports"""
+    log.warning('deleting all job reports generated so far!')
+    rmtree(JOBS_WRITE_PATH)
+    JOBS_WRITE_PATH.mkdir(parents=True)
+
+
+def cleanup_crawled_content(delete_job_reports=True):
+    log.warning('deleting crawled content scraped so far!')
+    rmtree(SCRAPE_DOWNLOAD_PATH)
+    SCRAPE_DOWNLOAD_PATH.mkdir(parents=True)
+    if delete_job_reports:
+        cleanup_reports()
+
+
+def cleanup():
+    cleanup_crawled_content()
