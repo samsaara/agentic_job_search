@@ -2,12 +2,13 @@ import asyncio
 import json
 from time import time
 from typing import Any, Dict
+from urllib.parse import urlparse
 
 from pydantic import ValidationError
 
 from src.config import JOB_TOPIC, JOBS_WRITE_PATH, log
 from src.llms import CustomLLM
-from src.utils import JobsModel, prepare_inputs
+from src.utils import JobsModel, OrgsModel, prepare_inputs
 
 
 class ProgrammaticJobSearch:
@@ -46,6 +47,20 @@ class ProgrammaticJobSearch:
             """.split()),
         }
 
+    def _merge_urls(self, job_url:str, org_url:str) -> str:
+        if not org_url.startswith('http'):
+            org_url = 'http://'+org_url
+        parsed_url = urlparse(org_url)
+        root_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        job_url = job_url if job_url.startswith('/') else '/'+job_url
+        return root_url + job_url
+
+    def _fix_job_links(self, json_resp):
+        jobs = json_resp['jobs']
+        if len(jobs):
+            for entry in jobs:
+                entry['href'] = self._merge_urls(entry['href'], json_resp['url'])
+        return json_resp
 
     def _clean_resp(self, resp):
         resp = resp.strip()
@@ -111,6 +126,7 @@ class ProgrammaticJobSearch:
                 'org': inp['org'],
                 'url': inp['url'],
             })
+            model_dict = OrgsModel(**self._fix_job_links(model_dict)).model_dump()
             log.debug(f'writing jobs info of {inp["org"]}')
             with open(f"{JOBS_WRITE_PATH}/{inp['org']}.json", 'w') as fl:
                 json.dump(model_dict, fl)
@@ -119,7 +135,7 @@ class ProgrammaticJobSearch:
         FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
         log.debug(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
         with open(FINAL_REPORT_PATH, 'w') as fl:
-            json.dump(results, fl, sort_keys=True)
+            json.dump(results, fl)
 
 
 def run():
