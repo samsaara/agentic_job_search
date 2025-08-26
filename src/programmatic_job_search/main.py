@@ -1,6 +1,7 @@
 import asyncio
 import json
 from time import time
+from typing import Any, Dict
 
 from pydantic import ValidationError
 
@@ -17,7 +18,7 @@ class ProgrammaticJobSearch:
         provider: str = 'OPENROUTER',
         temperature: float = 0.3,
         wait_between_requests_seconds:int = 15,
-        **payload_kwargs
+        **payload_kwargs: Dict[str, Any]
     ):
         self.topic = topic
         self.scrape = scrape
