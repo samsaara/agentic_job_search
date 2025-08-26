@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 import asyncio
-import json
 import warnings
-from time import time
 
 # from tenacity import retry, stop_after_attempt, wait_exponential
 from agentic_job_search.crew import AgenticJobSearch
-from src.config import JOBS_WRITE_PATH, log
-from src.utils import prepare_inputs
+from src.utils import prepare_inputs, store_final_jobs_report
 
 warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
 
@@ -31,7 +28,4 @@ async def _run_async():
 
 def run():
     results = asyncio.run(_run_async())
-    FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
-    log.debug(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
-    with open(FINAL_REPORT_PATH, 'w') as fl:
-        json.dump(results, fl)
+    store_final_jobs_report(results)

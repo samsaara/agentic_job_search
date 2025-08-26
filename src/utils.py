@@ -2,6 +2,7 @@ import json
 import random
 from glob import glob
 from shutil import rmtree
+from time import time
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -54,6 +55,13 @@ def store_jobs_info(results):
     with open(f'{JOBS_WRITE_PATH}/jobs_{org}.json', 'w') as fl:
         json.dump(model_dump, fl)
     return model_dump
+
+
+def store_final_jobs_report(results):
+    FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
+    log.debug(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
+    with open(FINAL_REPORT_PATH, 'w') as fl:
+        json.dump(results, fl)
 
 
 def cleanup_reports():

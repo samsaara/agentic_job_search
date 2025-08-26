@@ -1,7 +1,6 @@
 import asyncio
 import html
 import json
-from time import time
 from typing import Any, Dict
 from urllib.parse import urlparse
 
@@ -9,7 +8,7 @@ from pydantic import ValidationError
 
 from src.config import JOB_TOPIC, JOBS_WRITE_PATH, log
 from src.llms import CustomLLM
-from src.utils import JobsModel, OrgsModel, prepare_inputs
+from src.utils import JobsModel, OrgsModel, prepare_inputs, store_final_jobs_report
 
 
 class ProgrammaticJobSearch:
@@ -129,10 +128,7 @@ class ProgrammaticJobSearch:
                 json.dump(model_dict, fl)
             results.append(model_dict)
 
-        FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
-        log.debug(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
-        with open(FINAL_REPORT_PATH, 'w') as fl:
-            json.dump(results, fl)
+        store_final_jobs_report(results)
 
 
 def run():
