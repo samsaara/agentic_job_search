@@ -55,7 +55,7 @@ class ProgrammaticJobSearch:
         job_url = job_url if job_url.startswith('/') else '/'+job_url
         return root_url + job_url
 
-    def _fix_job_links(self, json_resp):
+    def _fix_job_listings(self, json_resp):
         jobs = json_resp['jobs']
         if len(jobs):
             for entry in jobs:
@@ -121,7 +121,7 @@ class ProgrammaticJobSearch:
                 'org': inp['org'],
                 'url': inp['url'],
             })
-            model_dict = OrgsModel(**self._fix_job_links(model_dict)).model_dump()
+            model_dict = OrgsModel(**self._fix_job_listings(model_dict)).model_dump()
             log.debug(f'writing jobs info of {inp["org"]}')
             with open(f"{JOBS_WRITE_PATH}/{inp['org']}.json", 'w') as fl:
                 json.dump(model_dict, fl)
