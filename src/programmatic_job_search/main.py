@@ -29,20 +29,18 @@ class ProgrammaticJobSearch:
         self.payload_kwargs = payload_kwargs
         self._common_msg = ' '.join(f"""
                 Your output should be strictly adhering to the following JSON Format:
-                { "jobs": Optional[List[{ "title": str, "href": str, "location": Optional, "workplaceType": Optional}] ] }
+                {{ "jobs": Optional[List[{{ "title": str, "href": str, "location": Optional, "workplaceType": Optional}}] ] }}
 
-                Do NOT make up any information that is NOT present in the user provided text.
-                Make sure you output nothing else but ONLY a valid json in the earlier requested format without backquotes.
-                Ensure the final output does NOT include any code block markers like ```json or ```python.
-                Return an empty list as a value for `jobs` if there are no jobs in the blob of text related to "{self.topic}".
-                Remember to ALWAYS output in JSON format.
+                The `href` should contain URL of that respective job title ONLY, which is embedded in the same job listing entry.
+                Do NOT make up any information that is NOT present in the user provided text nor mix up the URLs.
+                Set an empty list as a value for `jobs` if there are no jobs in the blob of text related to "{self.topic}".
         """.split())
         self._system_msg = {
             'role': 'system',
             'content': ' '.join(f"""
-                You're a veteran in web technologies (esp. HTML & CSS) and information retrieval.
-                The user will simply paste a blob of HTML text containing job listings and your goal is to extract all relevant information
-                limited ONLY to topics: "{self.topic}" EXCLUSIVELY FROM THAT BLOB OF TEXT.
+                You're a specialized bot excelled in web technologies (esp. HTML & CSS) and information retrieval from job postings.
+                You only speak in JSON. The user will simply paste a blob of HTML text containing job listings and your goal is to
+                extract all relevant information limited ONLY to topics: "{self.topic}" EXCLUSIVELY FROM THAT BLOB OF TEXT.
 
                 {self._common_msg}
             """.split()),
