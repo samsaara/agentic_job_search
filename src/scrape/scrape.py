@@ -74,6 +74,10 @@ async def scrape_orgs(max_concurrence=5):
         await browser.close()
 
 
-if __name__ == "__main__":
+def run_scrape():
     import asyncio
     asyncio.run(scrape_orgs())
+
+
+if __name__ == "__main__":
+    run_scrape()
