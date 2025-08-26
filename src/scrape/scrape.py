@@ -30,6 +30,7 @@ def get_orgs_info(orgs_yml_filepath=SCRAPE_ORGS_PATH):
 
 
 async def scrape_orgs(max_concurrence=5):
+    log.info("scraping organizations' data...")
 
     orgs = get_orgs_info()
     semaphore = asyncio.Semaphore(max_concurrence)
@@ -48,7 +49,6 @@ async def scrape_orgs(max_concurrence=5):
                         await page.wait_for_selector(selector)
                         entries = await page.query_selector_all(selector)
                         if len(entries):
-                            log.debug('getting inner html')
                             content = ' '.join([await entry.inner_html() for entry in entries])
                     else:
                         content = await page.content()

@@ -106,7 +106,6 @@ class CustomCrewLLM(BaseLLM):
             log.debug(response.content.decode('utf8'))
             log.debug(f"{response.headers=}\n{response.connection=}\n")
             raise
-        log.debug(f"{response.status_code=}")
         llm_resp = response.json()["choices"][0]["message"]["content"]
         log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}")
         return llm_resp
@@ -166,8 +165,7 @@ class CustomLLM:
             payload.update({'format': 'json', 'stream': False})
             payload.update(**payload_kwargs)
 
-
-        log.debug(f'calling llm with {payload_kwargs=}...')
+        log.debug('calling llm...')
         log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
         log.debug(f'sleeping for {self.wait} secs')
         sleep(self.wait)
@@ -178,9 +176,10 @@ class CustomLLM:
             msg = "Make sure you're either connected to the internet or running ollama server if using the latter as provider"
             log.exception(msg)
             raise
-        except Exception:
+        except Exception as e:
             log.debug(resp.content.decode('utf8'))
             log.debug(f"{resp.headers=}\n{resp.connection=}\n")
+            log.exception(e)
             raise
 
         if self.provider != 'OLLAMA':

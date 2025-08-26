@@ -1,14 +1,20 @@
 import asyncio
-import html
 import json
 from typing import Any, Dict
-from urllib.parse import urlparse
 
 from pydantic import ValidationError
 
-from src.config import JOB_TOPIC, JOBS_WRITE_PATH, log
+from src.config import JOB_TOPIC, log
 from src.llms import CustomLLM
-from src.utils import JobsModel, OrgsModel, prepare_inputs, store_final_jobs_report
+from src.utils import (
+    JobsModel,
+    OrgsModel,
+    clean_resp,
+    fix_job_listings,
+    prepare_inputs,
+    store_final_jobs_report,
+    store_jobs_info,
+)
 
 
 class ProgrammaticJobSearch:
@@ -25,9 +31,10 @@ class ProgrammaticJobSearch:
         self.scrape = scrape
         self.provider = provider
         self.temperature = temperature
-        self.inputs = asyncio.run(prepare_inputs(self.scrape))
-        self.llm = CustomLLM(self.provider, self.temperature, wait_between_requests_seconds)
         self.payload_kwargs = payload_kwargs
+
+        self.llm = CustomLLM(self.provider, self.temperature, wait_between_requests_seconds)
+        self.inputs = asyncio.run(prepare_inputs(self.scrape))
         self._common_msg = ' '.join(f"""
                 Your output should be strictly adhering to the following JSON Format:
                 {{ "jobs": Optional[List[{{ "title": str, "href": str, "location": Optional, "workplaceType": Optional}}] ] }}
@@ -44,42 +51,15 @@ class ProgrammaticJobSearch:
                 extract all relevant information limited ONLY to topics: "{self.topic}" EXCLUSIVELY FROM THAT BLOB OF TEXT.
 
                 {self._common_msg}
-            """.split()),
+           """.split()),
         }
-
-    def _merge_urls(self, job_url:str, org_url:str) -> str:
-        if not org_url.startswith('http'):
-            org_url = 'http://'+org_url
-        parsed_url = urlparse(org_url)
-        root_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        job_url = job_url if job_url.startswith('/') else '/'+job_url
-        return root_url + job_url
-
-    def _fix_job_listings(self, json_resp):
-        jobs = json_resp['jobs']
-        if len(jobs):
-            for entry in jobs:
-                entry['title'] = html.unescape(entry['title'])
-                entry['href'] = self._merge_urls(entry['href'], json_resp['url'])
-        return json_resp
-
-    def _clean_resp(self, resp):
-        resp = resp.strip()
-        start = resp.find('{')
-        if start != -1:
-           end = resp[::-1].find('}')
-           if end != -1:
-               resp = resp[start:len(resp)-end]
-        return resp
-
     def _call_llm(self, messages):
         orig_msg = messages
         INVALID_RESPONSE = True
         while INVALID_RESPONSE:
             resp = self.llm(messages, **self.payload_kwargs)
             try:
-                resp = self._clean_resp(resp)
-                log.debug(f"{': : '*30}\n\n{resp}\n\n{'; ; '*30}")
+                resp = clean_resp(resp)
                 model = json.loads(resp)
                 _ = JobsModel(**model)
                 INVALID_RESPONSE = False
@@ -122,11 +102,9 @@ class ProgrammaticJobSearch:
                 'org': inp['org'],
                 'url': inp['url'],
             })
-            model_dict = OrgsModel(**self._fix_job_listings(model_dict)).model_dump()
-            log.debug(f'writing jobs info of {inp["org"]}')
-            with open(f"{JOBS_WRITE_PATH}/{inp['org']}.json", 'w') as fl:
-                json.dump(model_dict, fl)
-            results.append(model_dict)
+            model_dump = OrgsModel(**fix_job_listings(model_dict)).model_dump()
+            store_jobs_info(model_dump)
+            results.append(model_dump)
 
         store_final_jobs_report(results)
 

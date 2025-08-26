@@ -1,9 +1,11 @@
+import html
 import json
 import random
 from glob import glob
 from shutil import rmtree
 from time import time
 from typing import List, Optional
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field
 
@@ -48,18 +50,45 @@ async def prepare_inputs(scrape:bool=True):
     return inputs
 
 
-def store_jobs_info(results):
-    model_dump = results.pydantic.model_dump()
+def merge_urls(job_url:str, org_url:str) -> str:
+    if not org_url.startswith('http'):
+        org_url = 'http://'+org_url
+    parsed_url = urlparse(org_url)
+    root_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    job_url = job_url if job_url.startswith('/') else '/'+job_url
+    return root_url + job_url
+
+
+def fix_job_listings(json_resp):
+    jobs = json_resp['jobs']
+    if len(jobs):
+        for entry in jobs:
+            entry['title'] = html.unescape(entry['title'])
+            entry['href']  = merge_urls(entry['href'], json_resp['url'])
+    return json_resp
+
+
+def clean_resp(self, resp):
+    resp = resp.strip()
+    start = resp.find('{')
+    if start != -1:
+       end = resp[::-1].find('}')
+       if end != -1:
+           resp = resp[start:len(resp)-end]
+    return resp
+
+
+def store_jobs_info(model_dump):
     org = '_'.join(model_dump['org'].lower().split())
-    log.debug(f'storing jobs found at "{org}"')
-    with open(f'{JOBS_WRITE_PATH}/jobs_{org}.json', 'w') as fl:
+    fp = f'{JOBS_WRITE_PATH}/jobs_{org}.json'
+    with open(fp, 'w') as fl:
         json.dump(model_dump, fl)
-    return model_dump
+    log.info(f"stored jobs info for \"{model_dump['org']}\" at '{fp}'")
 
 
 def store_final_jobs_report(results):
     FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
-    log.debug(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
+    log.info(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
     with open(FINAL_REPORT_PATH, 'w') as fl:
         json.dump(results, fl)
 

@@ -18,9 +18,8 @@ class AgenticJobSearch:
 
     def __init__(self, provider:str ='OPENROUTER', temperature:float = 0.1):
         super().__init__()
-        self.temperature = temperature
         dc = _get_llm_creds(provider)
-        self.llm = CustomCrewLLM(dc['model_name'], dc['api_key'], dc['api_base'], self.temperature)
+        self.llm = CustomCrewLLM(dc['model_name'], dc['api_key'], dc['api_base'], temperature)
 
     @agent
     def job_researcher(self) -> Agent:
@@ -39,7 +38,8 @@ class AgenticJobSearch:
 
     @after_kickoff
     def process_outputs(self, results):
-        return store_jobs_info(results)
+        model_dump = results.pydantic.model_dump()
+        return store_jobs_info(model_dump)
 
     @crew
     def crew(self) -> Crew:
