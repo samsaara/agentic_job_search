@@ -138,9 +138,9 @@ class ProgrammaticJobSearch:
 def run():
     kwargs = {
         'scrape': False,
-        'provider': 'OLLAMA',
+        'provider': 'AIML',
         'temperature': 0.1,
-        'wait_between_requests_seconds': .1,
+        'wait_between_requests_seconds': 5,
     }
     ps = ProgrammaticJobSearch(**kwargs)
     ps.get_job_info_from_all_orgs()
