@@ -103,24 +103,19 @@ class ProgrammaticJobSearch:
                 ])
         return model
 
-
     def get_job_info_from_all_orgs(self):
         results = []
         for inp in self.inputs:
             scrape_fp = inp['json_file_path']
             with open(scrape_fp) as fl:
                 html_content = json.load(fl)['content']
-            messages = []
-            if self.provider != 'OLLAMA':
-                messages.append(self._system_msg)
-            else:
-                self.payload_kwargs.update({'system': self._system_msg['content']})
-            messages.append(
+            messages = [
+                self._system_msg,
                 {
                     'role': 'user',
                     'content': html_content
                 }
-            )
+            ]
             model_dict = self._call_llm(messages)
             model_dict.update({
                 'org': inp['org'],
