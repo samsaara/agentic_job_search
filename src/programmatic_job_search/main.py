@@ -1,4 +1,5 @@
 import asyncio
+import html
 import json
 from time import time
 from typing import Any, Dict
@@ -59,6 +60,7 @@ class ProgrammaticJobSearch:
         jobs = json_resp['jobs']
         if len(jobs):
             for entry in jobs:
+                entry['title'] = html.unescape(entry['title'])
                 entry['href'] = self._merge_urls(entry['href'], json_resp['url'])
         return json_resp
 
