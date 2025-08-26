@@ -163,6 +163,7 @@ class CustomLLM:
         else:
             headers = None
             endpoint = f"{self.api_base}/chat"
+            payload.update({'format': 'json', 'stream': False})
             payload.update(**payload_kwargs)
 
 
