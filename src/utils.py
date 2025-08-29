@@ -30,6 +30,12 @@ class OrgsModel(BaseModel):
     jobs: List[JobModel]
 
 
+class InputModel(BaseModel):
+    org: str = Field(..., description="Name of the Organization")
+    url: str = Field(..., description="URL of the Organization")
+    content: str = Field(..., description="HTML content containing various job listings")
+
+
 async def prepare_inputs(scrape:bool=True):
     log.debug('preparing inputs')
     if scrape:
