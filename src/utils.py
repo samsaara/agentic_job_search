@@ -74,7 +74,7 @@ def fix_job_listings(json_resp):
     return json_resp
 
 
-def clean_resp(self, resp):
+def clean_resp(resp):
     resp = resp.strip()
     start = resp.find('{')
     if start != -1:
