@@ -31,12 +31,16 @@ Follow these steps to run the project locally after installing `uv`:
   - you can get free credentials from [openrouter.ai](https://openrouter.ai/) / [AIML](https://aimlapi.com/)
   - if you want to do local LLM inferencing (with [ollama](https://ollama.com/)), look at [that](#ollama-model) section below.
 - set the `JOB_TOPIC` in [config.py](src/config.py) to a topic of your interest. You get job reports just for roles related to just that.
+  - You can also pass it as param when running `main.py` from CLI
 - copy [orgs.yaml.example](src/scrape/orgs.yaml.example) & rename it to `orgs.yaml` to populate it with your favorites.
   - the `selector` key in the YAML file is used as CSS selector(s) with which you can filter for the exact content that you want to scrape so as not to download the entire webpage (which could be huge). Though its usage is *optional*, it is ***highly recommended***.
 - the `max_rpm` (requests per minute) value, that sets the number of calls made to an LLM, is intentionally set to `1` by default to avoid accidental surge in calls. Make sure everything is set correctly, and change it to any higher number later.
-  - you need to change it in [crew.py](src/agentic_job_search/crew.py) as well as in [agents.yaml](src/agentic_job_search/config/agents.yaml).
+  - You can also pass it as param when running `main.py` from CLI
   - If you have access to only free models on providers like openrouter/AIML, you get rate throttled pretty quickly because of the bursts of calls that crewAI makes if you run in async mode. So, instead go with non-async mode with `max_rpm` set or try [programmatic approach](#programmatic-job-search) and/or with [ollama](#ollama-model) instead.
 - run `crewai run` & enjoy ✨
+
+
+Optionally, you can also run `python src/agentic_job_search/main.py [--help]` for more info on params.
 
 
 ## Programmatic Job Search
@@ -51,6 +55,7 @@ Depending on your system config & the model used, the output can be relatively l
 1. set appropriate `kwargs` to the `run` function in [main.py](src/programmatic_job_search/main.py)
 2. run `uv run run_manual` to get the job reports programmatically.
 
+Optionally, you can also run `python src/programmatic_job_search/main.py [--help]` for more info on params.
 
 _(You can also of course use an ollama model as your crew's LLM and run the agentic workflow. All you need to do is set the credentials in `.env` and change the provider to `OLLAMA`)_.
 
@@ -70,6 +75,10 @@ If you wish to go with local LLM inferencing approach:
 4. run `ollama serve` to get the server running.
    - Most likely the server will be listening at `http://localhost:11434`. Check the logs and update this in the `.env` too
 
+
+## Experimentation
+
+You can run `uv run jupyter lab` to spin up a jupyter session with a notebook if you wish to play/test things.
 
 ## Troubleshooting
 If in case you get `ModuleNotFoundError` when run with `uv run`, prefix the command with `PYTHONPATH='.'`. For example,
