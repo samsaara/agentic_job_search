@@ -38,6 +38,7 @@ async def scrape_orgs(max_concurrence=5):
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
+        unscraped_orgs = []
 
         async def scrape(*, org, url, selector):
             log.debug(f'scraping "{url}" of org: "{org}"')
@@ -55,7 +56,7 @@ async def scrape_orgs(max_concurrence=5):
                 except Exception as e:
                     msg = f"Couldn't scrape '{url}'. Exception: {e}"
                     log.exception(msg)
-                    raise
+                    unscraped_orgs.append(org)
                 finally:
                     await page.close()
 
@@ -69,6 +70,9 @@ async def scrape_orgs(max_concurrence=5):
 
         tasks = [scrape(**entry) for entry in orgs]
         await asyncio.gather(*tasks)
+
+        if len(unscraped_orgs):
+            log.warning(f"couldn't scrape for the followings orgs: {unscraped_orgs}")
 
         await context.close()
         await browser.close()

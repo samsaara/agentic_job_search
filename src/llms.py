@@ -63,16 +63,16 @@ class CustomCrewLLM(BaseLLM):
         self.llm = CustomLLM(provider, temperature, wait_between_requests_seconds)
         super().__init__(model=self.llm.model_name, temperature=self.temperature)
 
-    """
-    retry(
-            # Stop retrying after overall timeout
-            stop=stop_after_delay(_CALL_TIMEOUT),
-            # Retry only on specific HTTP/network errors
-            retry=retry_if_exception_type((requests.exceptions.RequestException, RuntimeError)),
-            before=_acquire_lock,
-            after=_release_lock,
-            reraise=True
-    )  """
+
+    # retry(
+    #         # Stop retrying after overall timeout
+    #         stop=stop_after_delay(_CALL_TIMEOUT),
+    #         # Retry only on specific HTTP/network errors
+    #         retry=retry_if_exception_type((requests.exceptions.RequestException, RuntimeError)),
+    #         before=_acquire_lock,
+    #         after=_release_lock,
+    #         reraise=True
+    # )
     def call(
         self,
         messages: Union[str, List[Dict[str, str]]],
@@ -85,6 +85,7 @@ class CustomCrewLLM(BaseLLM):
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
 
+        # add this flag to let the custom llm know that it was being called by agentic workflow
         payload_kwargs = {'from_crew': True}
         if tools and self.supports_function_calling():
             payload_kwargs["tools"] = tools
@@ -113,8 +114,8 @@ class CustomLLM:
     def __init__(
         self,
         provider:str = 'OPENROUTER',
-        temperature:float=0.1,
-        wait_between_requests_seconds:int=5,
+        temperature:float = 0.1,
+        wait_between_requests_seconds:int = 5,
     ):
         self._provider = provider
         self.temperature = temperature

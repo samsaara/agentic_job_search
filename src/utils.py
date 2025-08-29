@@ -37,10 +37,12 @@ class InputModel(BaseModel):
 
 
 async def prepare_inputs(scrape:bool=True):
+    """read the scraped files and build a dictionary"""
     log.debug('preparing inputs')
     if scrape:
         await scrape_orgs()
     text_filepaths = glob(f"{SCRAPE_DOWNLOAD_PATH}/*.json")
+    # shuffle them so that you don't always feed the org data in the same order to the LLM
     random.shuffle(text_filepaths)
     inputs = []
     for fp in text_filepaths:
@@ -75,6 +77,7 @@ def fix_job_listings(json_resp):
 
 
 def clean_resp(resp):
+    """return the content inside code blocks if any"""
     resp = resp.strip()
     start = resp.find('{')
     if start != -1:

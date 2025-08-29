@@ -35,6 +35,7 @@ class ProgrammaticJobSearch:
 
         self.llm = CustomLLM(self.provider, self.temperature, wait_between_requests_seconds)
         self.inputs = asyncio.run(prepare_inputs(self.scrape))
+        # the message is split so that we can reuse this common message when we're not satisfied with LLM's response
         self._common_msg = ' '.join(f"""
                 Your output should be strictly adhering to the following JSON Format:
                 {{ "jobs": Optional[List[{{ "title": str, "href": str, "location": Optional, "workplaceType": Optional}}] ] }}
@@ -53,6 +54,7 @@ class ProgrammaticJobSearch:
                 {self._common_msg}
            """.split()),
         }
+
     def _call_llm(self, messages):
         orig_msg = messages
         INVALID_RESPONSE = True
@@ -97,6 +99,8 @@ class ProgrammaticJobSearch:
                     'content': html_content
                 }
             ]
+            # We call the LLM without giving `org` & `url` so that it doesn't hallucinate
+            # We add them back once the results are fetched.
             model_dict = self._call_llm(messages)
             model_dict.update({
                 'org': inp['org'],
@@ -109,16 +113,16 @@ class ProgrammaticJobSearch:
         store_final_jobs_report(results)
 
 
-def run():
+def run(**kwargs):
+    ps = ProgrammaticJobSearch(**kwargs)
+    ps.get_job_info_from_all_orgs()
+
+
+if __name__ == "__main__":
     kwargs = {
         'scrape': False,
         'provider': 'OLLAMA',
         'temperature': 0.1,
         'wait_between_requests_seconds': None,
     }
-    ps = ProgrammaticJobSearch(**kwargs)
-    ps.get_job_info_from_all_orgs()
-
-
-if __name__ == "__main__":
     run()

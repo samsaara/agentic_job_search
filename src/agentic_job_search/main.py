@@ -13,10 +13,10 @@ warnings.filterwarnings("ignore") #, category=SyntaxWarning, module="pysbd")
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
-""" @retry(
-        wait=wait_exponential(2, min=4, max=300),
-        stop=stop_after_attempt(3)
-) """
+# @retry(
+#         wait=wait_exponential(2, min=4, max=300),
+#         stop=stop_after_attempt(3)
+# )
 async def _run_async(**kwargs):
     try:
         inputs = await prepare_inputs()
