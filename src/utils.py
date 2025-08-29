@@ -49,7 +49,7 @@ async def prepare_inputs(scrape:bool=True):
         dc = {
             'org': content['org'],
             'url': content['url'],
-            'json_file_path': str(fp),
+            'file_path': str(fp),
             'topic': JOB_TOPIC,
         }
         inputs.append(dc)
