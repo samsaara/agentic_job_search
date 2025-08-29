@@ -117,7 +117,14 @@ class CustomCrewLLM(BaseLLM):
         return True
 
     def get_context_window_size(self) -> int:
-        return 262144
+        mappings = {
+            'openai/gpt-oss-20b:free': 128000,
+            'google/gemma3-12b-it': 128000,
+            'qwen2.5-coder:14b': 32000,
+        }
+        if self.model not in mappings.keys():
+            log.critical(f'context length for {self.model=} not found. Setting it to `4096`')
+        return mappings.get(self.model, 4096)
 
 
 class CustomLLM:
