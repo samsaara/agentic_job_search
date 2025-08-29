@@ -1,10 +1,12 @@
 extract_job_info:
   description: >
-    Using only the tools at your disposal, read the blob of HTML content from the JSON file at "{json_file_path}"
-    and extract all job related information related to the industry/sector "{topic}" found exclusively in that blob.
-    Do NOT make up information that you don't find in the JSON file.
+    Using only the tools at your disposal, read the blob of HTML content from the JSON file at "{file_path}"
+    and extract all job related information related to the industry/sector "{topic}" found exclusively in that blob esp. in the 'content' attribute.
+    You are not allowed to visit/fetch/scrape any external URLs.
   expected_output: >
-    a structured pydantic output of all required job related information
+    The `href` tag should contain URL of that respective job title ONLY, which is embedded in the same job listing entry.
+    Do NOT make up any information that is NOT present in the json blob of text nor mix up the URLs.
+    Set an empty list as a value for `jobs` if there are no jobs in the blob of text related to "{topic}".
+    Your final response should be a JSON in the format requested by the user.
   agent: job_researcher
-  async_execution: true
   verbose: true
