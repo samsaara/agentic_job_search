@@ -1,5 +1,4 @@
 import os
-import random
 from time import sleep
 from typing import Any, Dict, List, Optional, Union
 
@@ -55,14 +54,14 @@ def _get_llm_creds(provider:str='OPENROUTER'):
 class CustomCrewLLM(BaseLLM):
     def __init__(
             self,
-            model_name: str,
-            api_key: str,
-            api_base: str,
-            temperature: float = 0.1):
-        super().__init__(model=model_name, temperature=temperature)
-        self.api_key = api_key
-        self.headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        self.endpoint = f"{api_base}/chat/completions"
+            provider,
+            temperature: float = 0.1,
+            wait_between_requests_seconds:int = None
+    ):
+        self.provider = provider
+        self.temperature = temperature
+        self.llm = CustomLLM(provider, temperature, wait_between_requests_seconds)
+        super().__init__(model=self.llm.model_name, temperature=self.temperature)
 
     """
     retry(
@@ -83,31 +82,14 @@ class CustomCrewLLM(BaseLLM):
         from_task: Optional[Any] = None,
         from_agent: Optional[Any] = None,
     ) -> Union[str, Any]:
-        log.debug('calling llm...')
-        log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
 
-        payload = {
-            "model": self.model,
-            "temperature": self.temperature,
-            "messages": messages,
-        }
+        payload_kwargs = {'from_crew': True}
         if tools and self.supports_function_calling():
-            payload["tools"] = tools
+            payload_kwargs["tools"] = tools
 
-        wait = random.randint(5, 20)
-        log.debug(f'sleeping for {wait} secs')
-        sleep(wait)
-        try:
-            response = requests.post(self.endpoint, json=payload, headers=self.headers, timeout=60)
-            response.raise_for_status()
-        except Exception:
-            log.debug(response.content.decode('utf8'))
-            log.debug(f"{response.headers=}\n{response.connection=}\n")
-            raise
-        llm_resp = response.json()["choices"][0]["message"]["content"]
-        log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}")
+        llm_resp = self.llm(messages, **payload_kwargs)
         return llm_resp
 
     def supports_function_calling(self) -> bool:
@@ -169,13 +151,19 @@ class CustomLLM:
         else:
             headers = None
             endpoint = f"{self.api_base}/chat"
-            payload.update({'format': 'json', 'stream': False})
-            payload.update(**payload_kwargs)
+            from_crew = payload_kwargs.pop('from_crew', False)
+            if not from_crew:
+                # this forces resp. to be always in JSON which crewai doesn't like.
+                payload.update({'format': 'json'})
+            payload.update({'stream': False})
+
+        payload.update(**payload_kwargs)
 
         log.debug('calling llm...')
         log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
-        log.debug(f'sleeping for {self.wait} secs')
-        sleep(self.wait)
+        if self.wait:
+            log.debug(f'sleeping for {self.wait} secs')
+            sleep(self.wait)
         try:
             resp = requests.post(endpoint, json=payload, headers=headers, timeout=1200)
             resp.raise_for_status()
@@ -184,9 +172,7 @@ class CustomLLM:
             log.exception(msg)
             raise
         except Exception as e:
-            log.debug(resp.content.decode('utf8'))
-            log.debug(f"{resp.headers=}\n{resp.connection=}\n")
-            log.exception(e)
+            log.exception(f"Error: {e}\n\nResponse: {resp.content.decode('utf8')}\n\n{resp.headers=}\n{resp.connection=}\n")
             raise
 
         if self.provider != 'OLLAMA':
