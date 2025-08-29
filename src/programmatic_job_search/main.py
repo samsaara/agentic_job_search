@@ -1,7 +1,9 @@
 import asyncio
 import json
+from ast import literal_eval
 from typing import Any, Dict
 
+import click
 from pydantic import ValidationError
 
 from src.config import JOB_TOPIC, log
@@ -113,16 +115,21 @@ class ProgrammaticJobSearch:
         store_final_jobs_report(results)
 
 
-def run(**kwargs):
-    ps = ProgrammaticJobSearch(**kwargs)
+
+@click.command(context_settings=dict(show_default=True))
+@click.option("--topic", default=JOB_TOPIC, help='the topic to filter the scraped job listings with')
+@click.option("--scrape/--no-scrape", default=True, help="scrape org pages")
+@click.option("--provider", default='OLLAMA', help="LLM Provider. Add creds in '.env' file")
+@click.option('--temperature', default=0.1, help='model temperature (0-sticks to instructions, 1-highly creative)')
+@click.option('--wait-between-requests-seconds', default=None, help='no. of seconds to wait between two successive calls to LLM')
+@click.option('--payload-kwargs', default=dict(), help='other kwargs to be passed to the requests payload')
+def run(topic, scrape, provider, temperature, wait_between_requests_seconds, payload_kwargs):
+    payload_kwargs = literal_eval(payload_kwargs)
+    if wait_between_requests_seconds:
+        wait_between_requests_seconds = float(wait_between_requests_seconds)
+    ps = ProgrammaticJobSearch(topic, scrape, provider, temperature, wait_between_requests_seconds, **payload_kwargs)
     ps.get_job_info_from_all_orgs()
 
 
 if __name__ == "__main__":
-    kwargs = {
-        'scrape': False,
-        'provider': 'OLLAMA',
-        'temperature': 0.1,
-        'wait_between_requests_seconds': None,
-    }
     run()
