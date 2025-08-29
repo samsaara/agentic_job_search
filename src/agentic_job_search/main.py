@@ -33,12 +33,14 @@ def _run(**kwargs):
     except Exception as e:
         raise Exception(f"An error occurred while running the crew {e}")
 
-def run():
+def run(_async=False):
     kwargs = {
-        'provider': 'OLLAMA',
+        'provider': 'OPENROUTER',
         'temperature': 0.1,
-        'max_rpm': None,
+        'max_rpm': 1,
     }
-    # results = asyncio.run(_run_async(**kwargs))
-    results = _run(**kwargs)
+    if _async:
+        results = asyncio.run(_run_async(**kwargs))
+    else:
+        results = _run(**kwargs)
     store_final_jobs_report(results)
