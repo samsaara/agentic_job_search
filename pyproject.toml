@@ -1,0 +1,41 @@
+[project]
+name = "agentic_job_search"
+version = "0.1.0"
+description = "agentic_job_search using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "click>=8.2.1",
+    "crewai[tools]>=0.165.1,<1.0.0",
+    "tenacity>=9.1.2",
+]
+
+[project.scripts]
+run_crew = "agentic_job_search.main:run"
+run_manual = "src.programmatic_job_search.main:run"
+scrape_jobsites = "src.scrape.scrape:run_scrape"
+cleanup = "src.utils:cleanup"
+# train = "agentic_job_search.main:train"
+# replay = "agentic_job_search.main:replay"
+# test = "agentic_job_search.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# explicit import fix
+extend-select = ["I"]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+    "pre-commit>=4.3.0",
+    "ruff>=0.12.9",
+]
