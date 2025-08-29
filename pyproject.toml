@@ -10,7 +10,6 @@ dependencies = [
 ]
 
 [project.scripts]
-agentic_job_search = "agentic_job_search.main:run"
 run_crew = "agentic_job_search.main:run"
 run_manual = "src.programmatic_job_search.main:run"
 scrape_jobsites = "src.scrape.scrape:run_scrape"
