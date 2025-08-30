@@ -1,3 +1,5 @@
+![llama crewAI](llama_crew.jpg)
+
 # Agentic Job Search
 
 Hola 👋!!! I created this pet project to play with [crewai](https://www.crewai.com) and to let agents help me keep an eye on jobs at organizations I like related to a topic of interest. You can also run it without agents as well. Hope it proves useful to you! 🙂
@@ -16,7 +18,7 @@ Hola 👋!!! I created this pet project to play with [crewai](https://www.crewai
 ## Installation
 
 ### Pre-Requisites
-- Python `>=3.10 <3.14` installed on your system.
+- Python `>=3.10 <3.14` installed on your system
 - This project uses [uv](https://docs.astral.sh/uv/) for dependency management and package handling. So, install it with `pip` or `brew` or by other means.
 
 ### Instructions
@@ -46,7 +48,6 @@ Optionally, you can also run `python src/agentic_job_search/main.py [--help]` fo
 ## Programmatic Job Search
 
 You can also connect your favorite LLM running locally or on remote endpoint with [ollama](https://ollama.com/), for inferencing by skipping agentic workflow entirely.
-
 
 Since we already have the scraped data, instead of asking the agents to (a) read the file with a tool (b) interpret it and extract info, we can directly tweak the `SYSTEM` prompt of our desired model and just pass the scraped content as input to receive the results in JSON.
 
