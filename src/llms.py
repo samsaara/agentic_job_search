@@ -179,6 +179,15 @@ class CustomLLM:
         if self.provider != 'OLLAMA':
             llm_resp = resp.json()["choices"][0]["message"]["content"]
         else:
-            llm_resp = resp.json()['message']['content']
-        log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}")
+            resp = resp.json()
+            tps = resp['eval_count']/resp['eval_duration']*1e9
+            llm_resp = resp['message']['content']
+            log.debug(f"""
+                    model load time: {resp['load_duration']*1e9}s,
+                    {tps} tps,
+                    response time: {resp['total_duration']*1e9}s,
+                    num_prompt_tokens: {resp['prompt_eval_count']},
+                    num_resp_tokens: {resp['eval_count']}
+            """)
+        log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}\n\n")
         return llm_resp
