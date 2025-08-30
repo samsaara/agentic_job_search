@@ -119,7 +119,7 @@ class ProgrammaticJobSearch:
 @click.command(context_settings=dict(show_default=True))
 @click.option("--topic", default=JOB_TOPIC, help='the topic to filter the scraped job listings with')
 @click.option("--scrape/--no-scrape", default=True, help="scrape org pages")
-@click.option("--provider", default='OLLAMA', help="LLM Provider. Add creds in '.env' file")
+@click.option("--provider", default='OPENROUTER', help="LLM Provider. Add creds in '.env' file")
 @click.option('--temperature', default=0.1, help='model temperature (0-sticks to instructions, 1-highly creative)')
 @click.option('--wait-between-requests-seconds', default=None, help='no. of seconds to wait between two successive calls to LLM')
 @click.option('--payload-kwargs', default=dict(), help='other kwargs to be passed to the requests payload')

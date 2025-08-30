@@ -37,7 +37,7 @@ def _run(scrape=True, **kwargs):
 @click.command(context_settings=dict(show_default=True))
 @click.option("--scrape/--no-scrape", default=True, help="scrape org pages")
 @click.option('--async-run/--no-async-run', default=False, help='whether to run the crew in async mode')
-@click.option("--provider", default='OLLAMA', help="LLM Provider. Add creds in '.env' file")
+@click.option("--provider", default='OPENROUTER', help="LLM Provider. Add creds in '.env' file")
 @click.option('--temperature', default=0.1, help='model temperature (0-sticks to instructions, 1-highly creative)')
 @click.option('--max-rpm', default=1, help="Max LLM calls to make per minute. Pass `-1` to remove any limits (aka None)")
 def run(scrape, async_run, provider, temperature, max_rpm):
