@@ -6,11 +6,10 @@ Hola 👋!!! I created this pet project to play with [crewai](https://www.crewai
 
 ## How It Works
 
-1. Given a list of organizations, it scrapes job listings and stores them locally under [src/scrape/crawl](src/scrape/crawl).
-   - This part is async and can optionally be run only once (but it's recommended to run frequently as listings get updated often).
+1. Given a list of organizations, it scrapes job listings async and stores them locally under [src/scrape/crawl](src/scrape/crawl).
    - This is also done regardless of the approach (See [***Programmatic Job Search***](#programmatic-job-search) below)
 2. Use an agent to read the scraped content and extract job info related to your topic of interest from those blobs of text.
-   - Since our use case is not that complex, we only have one agent and one task which can be run async too.
+   - Option to run either synchronously or asynchronously.
    - You can use an LLM from a cloud provider that you have access to or that is running locally with ***ollama***.
 3. Store extracted job information for each organization under [src/scrape/jobs/](src/scrape/jobs/) as `jobs_<org>.json` and generate a final report as `final_jobs_report_<time>.json`
    - You can add your own logic to tweak this further! Read these from pandas for further analysis or convert to markdown etc.
@@ -82,6 +81,10 @@ If you wish to go with local LLM inferencing approach:
 You can run `uv run jupyter lab` to spin up a jupyter session with a notebook if you wish to play/test things.
 
 ## Troubleshooting
+
+
+Run `uv run <cmd> --help` to see and change default arguments.
+
 If in case you get `ModuleNotFoundError` when run with `uv run`, prefix the command with `PYTHONPATH='.'`. For example,
 ```bash
 PYTHONPATH='.' uv run run_manual
