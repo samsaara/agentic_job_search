@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import yaml
+from playwright.async_api import TimeoutError as playWrightTimeoutError
 from playwright.async_api import async_playwright
 
 from src.config import SCRAPE_DOWNLOAD_PATH, SCRAPE_ORGS_PATH, log
@@ -29,7 +30,7 @@ def get_orgs_info(orgs_yml_filepath=SCRAPE_ORGS_PATH):
 
 
 
-async def scrape_orgs(max_concurrence=5):
+async def scrape_orgs(max_concurrence=5, timeout_s=15):
     log.info("scraping organizations' data...")
 
     orgs = get_orgs_info()
@@ -41,18 +42,23 @@ async def scrape_orgs(max_concurrence=5):
         unscraped_orgs = []
 
         async def scrape(*, org, url, selector):
-            log.debug(f'scraping "{url}" of org: "{org}"')
+            log.debug(f'scraping org: "{org}"')
             async with semaphore:
                 page = await context.new_page()
                 try:
+                    content = None
                     await page.goto(url)
                     if selector is not None:
-                        await page.wait_for_selector(selector)
+                        await page.wait_for_selector(selector, timeout=timeout_s*1000) #10s
                         entries = await page.query_selector_all(selector)
                         if len(entries):
                             content = ' '.join([await entry.inner_html() for entry in entries])
                     else:
                         content = await page.content()
+                except playWrightTimeoutError:
+                    msg = f"Timeout trying to wait for selector. Couldn't scrape org: '{org}'"
+                    log.exception(msg)
+                    unscraped_orgs.append(org)
                 except Exception as e:
                     msg = f"Couldn't scrape '{url}'. Exception: {e}"
                     log.exception(msg)
