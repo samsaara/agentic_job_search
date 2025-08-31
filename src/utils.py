@@ -91,7 +91,7 @@ def store_jobs_info(model_dump):
     org = '_'.join(model_dump['org'].lower().split())
     fp = f'{JOBS_WRITE_PATH}/jobs_{org}.json'
     with open(fp, 'w') as fl:
-        json.dump(model_dump, fl)
+        json.dump(model_dump, fl, ensure_ascii=False, indent=4)
     log.info(f"stored jobs info for \"{model_dump['org']}\" at '{fp}'")
 
 
@@ -99,7 +99,7 @@ def store_final_jobs_report(results):
     FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
     log.info(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
     with open(FINAL_REPORT_PATH, 'w') as fl:
-        json.dump(results, fl)
+        json.dump(results, fl, ensure_ascii=False, indent=4)
 
 
 def cleanup_reports():
