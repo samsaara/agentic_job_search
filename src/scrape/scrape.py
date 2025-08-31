@@ -42,7 +42,7 @@ async def scrape_orgs(max_concurrence=5, timeout_s=15):
         unscraped_orgs = []
 
         async def scrape(*, org, url, selector):
-            log.debug(f'scraping "{url}" of org: "{org}"')
+            log.debug(f'scraping org: "{org}"')
             async with semaphore:
                 page = await context.new_page()
                 try:
