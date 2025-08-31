@@ -46,6 +46,7 @@ async def scrape_orgs(max_concurrence=5, timeout_s=15):
             async with semaphore:
                 page = await context.new_page()
                 try:
+                    content = None
                     await page.goto(url)
                     if selector is not None:
                         await page.wait_for_selector(selector, timeout=timeout_s*1000) #10s
