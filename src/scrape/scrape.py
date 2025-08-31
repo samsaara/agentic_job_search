@@ -7,6 +7,7 @@ import asyncio
 import json
 from pathlib import Path
 
+import click
 import yaml
 from playwright.async_api import TimeoutError as playWrightTimeoutError
 from playwright.async_api import async_playwright
@@ -49,7 +50,7 @@ async def scrape_orgs(max_concurrence=5, timeout_s=15):
                     content = None
                     await page.goto(url)
                     if selector is not None:
-                        await page.wait_for_selector(selector, timeout=timeout_s*1000) #10s
+                        await page.wait_for_selector(selector, timeout=timeout_s*1000)
                         entries = await page.query_selector_all(selector)
                         if len(entries):
                             content = ' '.join([await entry.inner_html() for entry in entries])
@@ -84,9 +85,12 @@ async def scrape_orgs(max_concurrence=5, timeout_s=15):
         await browser.close()
 
 
-def run_scrape():
+@click.command(context_settings=dict(show_default=True))
+@click.option('--max-concurrence', default=5, help='max async jobs to run')
+@click.option('--timeout-s', default=15, help='timeout in seconds waiting for selector')
+def run_scrape(max_concurrence, timeout_s):
     import asyncio
-    asyncio.run(scrape_orgs())
+    asyncio.run(scrape_orgs(int(max_concurrence), float(timeout_s)))
 
 
 if __name__ == "__main__":
