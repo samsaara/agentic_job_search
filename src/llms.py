@@ -101,6 +101,10 @@ class CustomLLM:
         self.wait = wait_between_requests_seconds
         load_creds(provider)
 
+        _prefix = bool(os.environ[f"{self.provider}_PREFIX"])
+        _model_name = os.environ[f"{self.provider}_MODEL_NAME"]
+        self.model_name = f'{self.provider.lower()}/{_model_name}' if _prefix else _model_name
+
     @property
     def provider(self):
         return self._provider
@@ -117,10 +121,6 @@ class CustomLLM:
         if payload_kwargs.pop('from_crew', False):
             _ = payload_kwargs.pop('format')
 
-        _prefix = bool(os.environ[f"{self.provider}_PREFIX"])
-        MODEL_NAME = os.environ[f"{self.provider}_MODEL_NAME"]
-        MODEL_NAME = f'{self.provider.lower()}/{MODEL_NAME}' if _prefix else MODEL_NAME
-
         log.debug('calling llm...')
         log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
         if self.wait:
@@ -128,7 +128,7 @@ class CustomLLM:
             sleep(self.wait)
         try:
             resp = completion(
-                MODEL_NAME, messages, **payload_kwargs
+                self.model_name, messages, **payload_kwargs
             )
         except APIConnectionError as e:
             log.exception(e)
