@@ -4,11 +4,9 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 from crewai import BaseLLM
-from dotenv import load_dotenv
 
-from src.config import log
+from src.config import log, load_creds
 
-load_dotenv()
 
 """
 from tenacity import (
@@ -38,17 +36,6 @@ def _release_lock(retry_state):
     if _call_lock.locked():
         _call_lock.release()
  """
-
-
-def _get_llm_creds(provider:str='OPENROUTER'):
-    # replace with any provider you like but make sure you have stored its credentials in `.env`
-    # They should all start with this prefix
-    return {
-        'model_name': os.environ.get(f"{provider}_MODEL_NAME"),
-        'api_base': os.environ.get(f"{provider}_API_BASE"),
-        'api_key': os.environ.get(f"{provider}_API_KEY"),
-    }
-
 
 
 class CustomCrewLLM(BaseLLM):
@@ -120,21 +107,15 @@ class CustomLLM:
         self._provider = provider
         self.temperature = temperature
         self.wait = wait_between_requests_seconds
-        self._set_creds()
+        load_creds(provider)
 
     @property
     def provider(self):
         return self._provider
 
-    def _set_creds(self):
-        dc = _get_llm_creds(self.provider)
-        self.model_name = dc.get('model_name')
-        self.api_key = dc.get('api_key')
-        self.api_base = dc.get('api_base')
-
     def change_provider(self, new_provider):
         self._provider = new_provider
-        self._set_creds()
+        load_creds(new_provider)
 
     def __call__(self, messages, **payload_kwargs):
         if isinstance(messages, str):
@@ -191,3 +172,5 @@ class CustomLLM:
             """)
         log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}\n\n")
         return llm_resp
+    
+ 

@@ -1,0 +1,23 @@
+OPENAI:
+    MODEL_NAME: ""
+    API_BASE: ""
+    API_KEY: ""
+    PREFIX: 0
+
+OPENROUTER:
+    MODEL_NAME: ""
+    API_BASE: "https://openrouter.ai/api/v1"
+    API_KEY: ""
+    PREFIX: 1
+
+AIML:
+    MODEL_NAME: ""
+    API_BASE: "https://api.aimlapi.com/v2"
+    API_KEY: ""
+    PREFIX: 1
+
+OLLAMA:
+    MODEL_NAME: ""
+    API_BASE: "http://localhost:11434"
+    API_KEY: ""
+    PREFIX: 1

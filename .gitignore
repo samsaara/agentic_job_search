@@ -212,3 +212,4 @@ orgs.yaml
 *.pkl
 crawl/
 notebooks/
+creds.yaml
