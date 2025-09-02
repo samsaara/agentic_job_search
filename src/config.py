@@ -1,7 +1,8 @@
-import os
-import yaml
 import logging
+import os
 from pathlib import Path
+
+import yaml
 
 # Change this to whatever you're interested in.
 JOB_TOPIC = "Data Science or Machine/Deep Learning or NLP/LLMs or AI"
@@ -45,7 +46,6 @@ def load_creds(provider):
 
     if creds.get(provider):
         for k, v in creds[provider].items():
-            log.debug(f'setting "{provider}_{k}" to "{v}"')
             os.environ[f'{provider}_{k}'] = str(v)
     else:
         log.error(f'LLM credentials for "{provider}" not found')

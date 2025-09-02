@@ -36,7 +36,7 @@ class ProgrammaticJobSearch:
         self.payload_kwargs = payload_kwargs
 
         self.llm = CustomLLM(self.provider, self.temperature, wait_between_requests_seconds)
-        self.inputs = asyncio.run(prepare_inputs(self.scrape))[:2]
+        self.inputs = asyncio.run(prepare_inputs(self.scrape))
         # the message is split so that we can reuse this common message when we're not satisfied with LLM's response
         self._common_msg = ' '.join(f"""
                 Your output should be strictly adhering to the following JSON Format:
