@@ -36,7 +36,7 @@ class InputModel(BaseModel):
     content: str = Field(..., description="HTML content containing various job listings")
 
 
-async def prepare_inputs(scrape:bool=True):
+async def prepare_inputs(scrape:bool=True, skip_empty_content:bool=True):
     """read the scraped files and build a dictionary"""
     log.debug('preparing inputs')
     if scrape:
@@ -48,6 +48,10 @@ async def prepare_inputs(scrape:bool=True):
     for fp in text_filepaths:
         with open(fp) as fl:
             content = json.load(fl)
+        if content is None:
+            log.warning(f'no HTML content found for org: {content["org"]}. Skipping it.')
+            if skip_empty_content:
+                break
         dc = {
             'org': content['org'],
             'url': content['url'],

@@ -94,20 +94,26 @@ class ProgrammaticJobSearch:
             scrape_fp = inp['file_path']
             with open(scrape_fp) as fl:
                 html_content = json.load(fl)['content']
-            messages = [
-                self._system_msg,
-                {
-                    'role': 'user',
-                    'content': html_content
-                }
-            ]
-            # We call the LLM without giving `org` & `url` so that it doesn't hallucinate
-            # We add them back once the results are fetched.
-            model_dict = self._call_llm(messages)
-            model_dict.update({
-                'org': inp['org'],
-                'url': inp['url'],
-            })
+
+            model_dict = {
+                    'org': inp['org'],
+                    'url': inp['url'],
+            }
+            if html_content is not None:
+                messages = [
+                    self._system_msg,
+                    {
+                        'role': 'user',
+                        'content': html_content
+                    }
+                ]
+                # We call the LLM without giving `org` & `url` to avoid hallucinations
+                # We add them back once the results are fetched.
+                model_dict.update(**self._call_llm(messages))
+            else:
+                log.warning(f'no HTML content found for org: {inp["org"]}')
+                model_dict.update({'jobs': []})
+
             model_dump = OrgsModel(**fix_job_listings(model_dict)).model_dump()
             store_jobs_info(model_dump)
             results.append(model_dump)
@@ -121,12 +127,11 @@ class ProgrammaticJobSearch:
 @click.option("--scrape/--no-scrape", default=True, help="scrape org pages")
 @click.option("--provider", default='OPENROUTER', help="LLM Provider. Add creds in '.env' file")
 @click.option('--temperature', default=0.1, help='model temperature (0-sticks to instructions, 1-highly creative)')
-@click.option('--wait-between-requests-seconds', default=None, help='no. of seconds to wait between two successive calls to LLM')
+@click.option('--wait-between-requests-seconds', default=0.1, help='no. of seconds to wait between two successive calls to LLM. Pass `-1` to set it to None')
 @click.option('--payload-kwargs', default=dict(), help='other kwargs to be passed to the requests payload')
 def run(topic, scrape, provider, temperature, wait_between_requests_seconds, payload_kwargs):
     payload_kwargs = literal_eval(payload_kwargs)
-    if wait_between_requests_seconds:
-        wait_between_requests_seconds = float(wait_between_requests_seconds)
+    wait_between_requests_seconds = None if wait_between_requests_seconds == '-1' else float(wait_between_requests_seconds)
     ps = ProgrammaticJobSearch(topic, scrape, provider, temperature, wait_between_requests_seconds, **payload_kwargs)
     ps.get_job_info_from_all_orgs()
 

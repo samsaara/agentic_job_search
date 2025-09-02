@@ -2,13 +2,10 @@ import os
 from time import sleep
 from typing import Any, Dict, List, Optional, Union
 
-import requests
 from crewai import BaseLLM
-from dotenv import load_dotenv
+from litellm import APIConnectionError, completion
 
-from src.config import log
-
-load_dotenv()
+from src.config import load_creds, log
 
 """
 from tenacity import (
@@ -38,17 +35,6 @@ def _release_lock(retry_state):
     if _call_lock.locked():
         _call_lock.release()
  """
-
-
-def _get_llm_creds(provider:str='OPENROUTER'):
-    # replace with any provider you like but make sure you have stored its credentials in `.env`
-    # They should all start with this prefix
-    return {
-        'model_name': os.environ.get(f"{provider}_MODEL_NAME"),
-        'api_base': os.environ.get(f"{provider}_API_BASE"),
-        'api_key': os.environ.get(f"{provider}_API_KEY"),
-    }
-
 
 
 class CustomCrewLLM(BaseLLM):
@@ -100,14 +86,7 @@ class CustomCrewLLM(BaseLLM):
         return True
 
     def get_context_window_size(self) -> int:
-        mappings = {
-            'openai/gpt-oss-20b:free': 128000,
-            'google/gemma3-12b-it': 128000,
-            'qwen2.5-coder:14b': 32000,
-        }
-        if self.model not in mappings.keys():
-            log.critical(f'context length for {self.model=} not found. Setting it to `4096`')
-        return mappings.get(self.model, 4096)
+        return int(os.environ[f"{self.provider}_CONTEXT_LENGTH"])
 
 
 class CustomLLM:
@@ -120,45 +99,27 @@ class CustomLLM:
         self._provider = provider
         self.temperature = temperature
         self.wait = wait_between_requests_seconds
-        self._set_creds()
+        load_creds(provider)
+
+        _prefix = bool(os.environ[f"{self.provider}_PREFIX"])
+        _model_name = os.environ[f"{self.provider}_MODEL_NAME"]
+        self.model_name = f'{self.provider.lower()}/{_model_name}' if _prefix else _model_name
 
     @property
     def provider(self):
         return self._provider
 
-    def _set_creds(self):
-        dc = _get_llm_creds(self.provider)
-        self.model_name = dc.get('model_name')
-        self.api_key = dc.get('api_key')
-        self.api_base = dc.get('api_base')
-
     def change_provider(self, new_provider):
         self._provider = new_provider
-        self._set_creds()
+        load_creds(new_provider)
 
     def __call__(self, messages, **payload_kwargs):
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
 
-        payload = {
-            'model': self.model_name,
-            'messages': messages,
-            'temperature': self.temperature,
-        }
-
-        if self.provider != 'OLLAMA':
-            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-            endpoint = f"{self.api_base}/chat/completions"
-        else:
-            headers = None
-            endpoint = f"{self.api_base}/chat"
-            from_crew = payload_kwargs.pop('from_crew', False)
-            if not from_crew:
-                # this forces resp. to be always in JSON which crewai doesn't like.
-                payload.update({'format': 'json'})
-            payload.update({'stream': False})
-
-        payload.update(**payload_kwargs)
+        payload_kwargs.update({'stream': False, 'format': 'json', 'timeout': 300, 'temperature': self.temperature})
+        if payload_kwargs.pop('from_crew', False):
+            _ = payload_kwargs.pop('format')
 
         log.debug('calling llm...')
         log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
@@ -166,28 +127,18 @@ class CustomLLM:
             log.debug(f'sleeping for {self.wait} secs')
             sleep(self.wait)
         try:
-            resp = requests.post(endpoint, json=payload, headers=headers, timeout=1200)
-            resp.raise_for_status()
-        except requests.exceptions.ConnectionError:
-            msg = "Make sure you're either connected to the internet or running ollama server if using the latter as provider"
-            log.exception(msg)
+            resp = completion(
+                self.model_name, messages, **payload_kwargs
+            )
+        except APIConnectionError as e:
+            log.exception(e)
             raise
         except Exception as e:
-            log.exception(f"Error: {e}\n\nResponse: {resp.content.decode('utf8')}\n\n{resp.headers=}\n{resp.connection=}\n")
+            log.exception(e)
             raise
 
-        if self.provider != 'OLLAMA':
-            llm_resp = resp.json()["choices"][0]["message"]["content"]
-        else:
-            resp = resp.json()
-            tps = resp['eval_count']/resp['eval_duration']*1e9
-            llm_resp = resp['message']['content']
-            log.debug(f"""
-                    model load time: {resp['load_duration']*1e9}s,
-                    {tps} tps,
-                    response time: {resp['total_duration']*1e9}s,
-                    num_prompt_tokens: {resp['prompt_eval_count']},
-                    num_resp_tokens: {resp['eval_count']}
-            """)
+        llm_resp = resp.choices[0].message.content
+        log.debug(f"Usage: {resp.usage.model_dump_json()}")
+
         log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}\n\n")
         return llm_resp

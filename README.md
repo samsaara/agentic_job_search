@@ -28,7 +28,7 @@ Follow these steps to run the project locally after installing `uv`:
 - run `crewai install`
   - this automatically creates a virtual environment `.venv` in the repo and installs all dependencies
   - if you want to install any additional dependencies, run `uv add [--dev] <pkg>`
-- copy `.env.example`, rename it to `.env` & populate it
+- copy `creds.yaml.example`, rename it to `creds.yaml` & populate it
   - you can get free credentials from [openrouter.ai](https://openrouter.ai/) / [AIML](https://aimlapi.com/)
   - if you want to do local LLM inferencing (with [ollama](https://ollama.com/)), look at [that](#ollama-model) section below.
 - set the `JOB_TOPIC` in [config.py](src/config.py) to a topic of your interest. You get job reports just for roles related to just that.
@@ -57,11 +57,10 @@ Depending on your system config & the model used, the output can be relatively l
 
 Optionally, you can also run `python src/programmatic_job_search/main.py [--help]` for more info on params.
 
-_(You can also of course use an ollama model as your crew's LLM and run the agentic workflow. All you need to do is set the credentials in `.env` and change the provider to `OLLAMA`)_.
+_(You can also of course use an ollama model as your crew's LLM and run the agentic workflow. All you need to do is set the credentials in the `creds.yaml` file and run **main.py** with `--provider=OLLAMA`)_
 
 ## Customizing
 
-- Populate `.env` file with your credentials.
 - You can add/edit agents & tasks config under [src/agentic_job_search/config](src/agentic_job_search/config/)
 - Modify [crew.py](src/agentic_job_search/crew.py) to add your own logic, tools and specific args
 - Modify [main.py](src/agentic_job_search/main.py) to add custom inputs for your agents and tasks
@@ -71,7 +70,7 @@ _(You can also of course use an ollama model as your crew's LLM and run the agen
 If you wish to go with local LLM inferencing approach:
 1. install ollama
 2. pull a model of your choice
-3. populate the corresponding values in your `.env`.
+3. populate the corresponding values in your `creds.yaml`.
 4. run `ollama serve` to get the server running.
    - Most likely the server will be listening at `http://localhost:11434`. Check the logs and update this in the `.env` too
 

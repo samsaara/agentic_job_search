@@ -6,7 +6,7 @@ extract_job_info:
   expected_output: >
     The `href` tag should contain URL of that respective job title ONLY, which is embedded in the same job listing entry.
     Do NOT make up any information that is NOT present in the json blob of text nor mix up the URLs.
-    Set an empty list as a value for `jobs` if there are no jobs in the blob of text related to "{topic}".
-    Your final response should be a JSON in the format requested by the user.
+    Set an empty list as a value for `jobs` if either the provided HTML content is empty or there are no jobs in the blob of text
+    related to "{topic}". Your final response should be a JSON in the format requested by the user.
   agent: job_researcher
   verbose: true
