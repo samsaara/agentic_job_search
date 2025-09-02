@@ -46,8 +46,8 @@ class CustomCrewLLM(BaseLLM):
     ):
         self.provider = provider
         self.temperature = temperature
-        super().__init__(model=self.llm.model_name, temperature=self.temperature)
         self.llm = CustomLLM(provider, temperature, wait_between_requests_seconds)
+        super().__init__(model=self.llm.model_name, temperature=self.temperature)
 
 
     # retry(
