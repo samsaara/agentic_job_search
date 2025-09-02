@@ -30,6 +30,7 @@ Follow these steps to run the project locally after installing `uv`:
   - if you want to install any additional dependencies, run `uv add [--dev] <pkg>`
 - copy `creds.yaml.example`, rename it to `creds.yaml` & populate it
   - you can get free credentials from [openrouter.ai](https://openrouter.ai/) / [AIML](https://aimlapi.com/)
+  - set `PREFIX` to `1` if you wish to prefix the provider name to the model name (e.g., `openrouter/google/gemma-3-12b-it`). See LiteLLM's [list of providers](https://docs.litellm.ai/docs/providers) for more info.
   - if you want to do local LLM inferencing (with [ollama](https://ollama.com/)), look at [that](#ollama-model) section below.
 - set the `JOB_TOPIC` in [config.py](src/config.py) to a topic of your interest. You get job reports just for roles related to just that.
   - You can also pass it as param when running `main.py` from CLI
