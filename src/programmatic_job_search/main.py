@@ -131,7 +131,7 @@ class ProgrammaticJobSearch:
 @click.option('--payload-kwargs', default=dict(), help='other kwargs to be passed to the requests payload')
 def run(topic, scrape, provider, temperature, wait_between_requests_seconds, payload_kwargs):
     payload_kwargs = literal_eval(payload_kwargs)
-    wait_between_requests_seconds = None if wait_between_requests_seconds == '-1' else float(wait_between_requests_seconds)
+    wait_between_requests_seconds = None if wait_between_requests_seconds == float('-1') else float(wait_between_requests_seconds)
     ps = ProgrammaticJobSearch(topic, scrape, provider, temperature, wait_between_requests_seconds, **payload_kwargs)
     ps.get_job_info_from_all_orgs()
 
