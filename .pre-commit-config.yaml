@@ -17,5 +17,5 @@ repos:
         name: ruff
         entry: ruff
         language: system
-        args: [check, --fix]
+        args: [format]
         types: [python]
