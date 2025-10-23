@@ -88,7 +88,7 @@ class CustomLLM:
         self,
         provider: str = "OPENROUTER",
         temperature: float = 0.1,
-        wait_between_requests_seconds: int = 5,
+        wait_between_requests_seconds: float = 5,
     ):
         self._provider = provider
         self.temperature = temperature

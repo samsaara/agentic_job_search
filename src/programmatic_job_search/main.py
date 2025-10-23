@@ -26,7 +26,7 @@ class ProgrammaticJobSearch:
         scrape: bool = True,
         provider: str = "OPENROUTER",
         temperature: float = 0.3,
-        wait_between_requests_seconds: int = 15,
+        wait_between_requests_seconds: float = 15,
         **payload_kwargs: Dict[str, Any],
     ):
         self.topic = topic
@@ -64,6 +64,7 @@ class ProgrammaticJobSearch:
     def _call_llm(self, messages):
         orig_msg = messages
         INVALID_RESPONSE = True
+        model, msg = None, ""
         while INVALID_RESPONSE:
             resp = self.llm(messages, **self.payload_kwargs)
             try:
