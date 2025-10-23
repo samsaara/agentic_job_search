@@ -12,7 +12,7 @@ from src.utils import OrgsModel, fix_job_listings, store_jobs_info
 # Unfortunately, overriding with templates don't seem to fully work as expected.
 # See README for known issues.
 templates = {
-    'system': """
+    "system": """
         Hey, You are {role}. {backstory}\nYour mission is: {goal}
         You ONLY have access to the "{tool_names}" tool and should use it to read the file content.
         Here's more info about it:\n\n{tools}.
@@ -27,13 +27,12 @@ templates = {
 
         Once all necessary information is gathered, return your response in JSON format requested by the user.
     """,
-
-    'prompt':  """This is what you have to do: {input}.""",
-
-    'response': """{{ .Response }} Ensure your final answer contains only the content in the following format: {output_format}
+    "prompt": """This is what you have to do: {input}.""",
+    "response": """{{ .Response }} Ensure your final answer contains only the content in the following format: {output_format}
         \nEnsure the final output does not include any code block markers like ```json or ```python.
-    """
+    """,
 }
+
 
 @CrewBase
 class AgenticJobSearch:
@@ -42,7 +41,7 @@ class AgenticJobSearch:
     agents: List[BaseAgent]
     tasks: List[Task]
 
-    def __init__(self, provider:str ='OPENROUTER', temperature:float = 0.1, max_rpm=1):
+    def __init__(self, provider: str = "OPENROUTER", temperature: float = 0.1, max_rpm=1):
         super().__init__()
         self.max_rpm = max_rpm  # to avoid rate throttling
         self.crew_llm = CustomCrewLLM(provider, temperature)
@@ -50,9 +49,9 @@ class AgenticJobSearch:
     @agent
     def job_researcher(self) -> Agent:
         return Agent(
-            config=self.agents_config['job_researcher'], # type: ignore[index]
+            config=self.agents_config["job_researcher"],  # type: ignore[index]
             llm=self.crew_llm,
-            tools = [FileReadTool()],
+            tools=[FileReadTool()],
             max_rpm=self.max_rpm,
             use_system_prompt=True,
             # system_template=templates['system'],
@@ -63,7 +62,7 @@ class AgenticJobSearch:
     @task
     def extract_job_info(self) -> Task:
         return Task(
-            config=self.tasks_config['extract_job_info'], # type: ignore[index]
+            config=self.tasks_config["extract_job_info"],  # type: ignore[index]
             output_pydantic=OrgsModel,
         )
 
@@ -79,10 +78,10 @@ class AgenticJobSearch:
     @crew
     def crew(self) -> Crew:
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=self.agents,  # Automatically created by the @agent decorator
+            tasks=self.tasks,  # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
-            output_log_file='logs.json',
+            output_log_file="logs.json",
             max_rpm=self.max_rpm,  # OpenRouter Free API Limitation is 20 RPM
         )

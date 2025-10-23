@@ -18,9 +18,9 @@ for path in (SCRAPE_DOWNLOAD_PATH, JOBS_WRITE_PATH):
 
 def get_logger(LOG_LEVEL="INFO"):
     LOG_PATH = Path("logs.log")
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-    log = logging.Logger('agentic_search')
+    log = logging.Logger("agentic_search")
     log.setLevel(LOG_LEVEL)
 
     file_handler = logging.FileHandler(LOG_PATH)
@@ -32,7 +32,7 @@ def get_logger(LOG_LEVEL="INFO"):
     return log
 
 
-log = get_logger('INFO')
+log = get_logger("INFO")
 
 
 def load_creds(provider):
@@ -46,6 +46,6 @@ def load_creds(provider):
 
     if creds.get(provider):
         for k, v in creds[provider].items():
-            os.environ[f'{provider}_{k}'] = str(v)
+            os.environ[f"{provider}_{k}"] = str(v)
     else:
         log.error(f'LLM credentials for "{provider}" not found')

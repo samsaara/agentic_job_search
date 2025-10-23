@@ -36,9 +36,9 @@ class InputModel(BaseModel):
     content: str = Field(..., description="HTML content containing various job listings")
 
 
-async def prepare_inputs(scrape:bool=True, skip_empty_content:bool=True):
+async def prepare_inputs(scrape: bool = True, skip_empty_content: bool = True):
     """read the scraped files and build a dictionary"""
-    log.debug('preparing inputs')
+    log.debug("preparing inputs")
     if scrape:
         await scrape_orgs()
     text_filepaths = glob(f"{SCRAPE_DOWNLOAD_PATH}/*.json")
@@ -49,52 +49,52 @@ async def prepare_inputs(scrape:bool=True, skip_empty_content:bool=True):
         with open(fp) as fl:
             content = json.load(fl)
         if content is None:
-            log.warning(f'no HTML content found for org: {content["org"]}. Skipping it.')
+            log.warning(f"no HTML content found for org: {content['org']}. Skipping it.")
             if skip_empty_content:
                 break
         dc = {
-            'org': content['org'],
-            'url': content['url'],
-            'file_path': str(fp),
-            'topic': JOB_TOPIC,
+            "org": content["org"],
+            "url": content["url"],
+            "file_path": str(fp),
+            "topic": JOB_TOPIC,
         }
         inputs.append(dc)
     return inputs
 
 
-def merge_urls(job_url:str, org_url:str) -> str:
-    if not org_url.startswith('http'):
-        org_url = 'http://'+org_url
+def merge_urls(job_url: str, org_url: str) -> str:
+    if not org_url.startswith("http"):
+        org_url = "http://" + org_url
     parsed_url = urlparse(org_url)
     root_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-    job_url = job_url if job_url.startswith('/') else '/'+job_url
+    job_url = job_url if job_url.startswith("/") else "/" + job_url
     return root_url + job_url
 
 
 def fix_job_listings(json_resp):
-    jobs = json_resp['jobs']
+    jobs = json_resp["jobs"]
     if len(jobs):
         for entry in jobs:
-            entry['title'] = html.unescape(entry['title'])
-            entry['href']  = merge_urls(entry['href'], json_resp['url'])
+            entry["title"] = html.unescape(entry["title"])
+            entry["href"] = merge_urls(entry["href"], json_resp["url"])
     return json_resp
 
 
 def clean_resp(resp):
     """return the content inside code blocks if any"""
     resp = resp.strip()
-    start = resp.find('{')
+    start = resp.find("{")
     if start != -1:
-       end = resp[::-1].find('}')
-       if end != -1:
-           resp = resp[start:len(resp)-end]
+        end = resp[::-1].find("}")
+        if end != -1:
+            resp = resp[start : len(resp) - end]
     return resp
 
 
 def store_jobs_info(model_dump):
-    org = '_'.join(model_dump['org'].lower().split())
-    fp = f'{JOBS_WRITE_PATH}/jobs_{org}.json'
-    with open(fp, 'w') as fl:
+    org = "_".join(model_dump["org"].lower().split())
+    fp = f"{JOBS_WRITE_PATH}/jobs_{org}.json"
+    with open(fp, "w") as fl:
         json.dump(model_dump, fl, ensure_ascii=False, indent=4)
     log.info(f"stored jobs info for \"{model_dump['org']}\" at '{fp}'")
 
@@ -102,19 +102,19 @@ def store_jobs_info(model_dump):
 def store_final_jobs_report(results):
     FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
     log.info(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
-    with open(FINAL_REPORT_PATH, 'w') as fl:
+    with open(FINAL_REPORT_PATH, "w") as fl:
         json.dump(results, fl, ensure_ascii=False, indent=4)
 
 
 def cleanup_reports():
     """delete generated job reports"""
-    log.warning('deleting all job reports generated so far!')
+    log.warning("deleting all job reports generated so far!")
     rmtree(JOBS_WRITE_PATH)
     JOBS_WRITE_PATH.mkdir(parents=True)
 
 
 def cleanup_crawled_content(delete_job_reports=True):
-    log.warning('deleting crawled content scraped so far!')
+    log.warning("deleting crawled content scraped so far!")
     rmtree(SCRAPE_DOWNLOAD_PATH)
     SCRAPE_DOWNLOAD_PATH.mkdir(parents=True)
     if delete_job_reports:

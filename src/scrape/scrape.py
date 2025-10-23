@@ -21,14 +21,14 @@ def get_orgs_info(orgs_yml_filepath=SCRAPE_ORGS_PATH):
 
     orgs = [
         {
-            'org'     : org_name,
-            'url'     : vals['url'],
-            'selector': vals.get('selector'),
-        } for org_name, vals in orgs_cfg.items()
+            "org": org_name,
+            "url": vals["url"],
+            "selector": vals.get("selector"),
+        }
+        for org_name, vals in orgs_cfg.items()
     ]
 
     return orgs
-
 
 
 async def scrape_orgs(max_concurrence=5, timeout_s=15):
@@ -50,10 +50,10 @@ async def scrape_orgs(max_concurrence=5, timeout_s=15):
                     content = None
                     await page.goto(url)
                     if selector is not None:
-                        await page.wait_for_selector(selector, timeout=timeout_s*1000)
+                        await page.wait_for_selector(selector, timeout=timeout_s * 1000)
                         entries = await page.query_selector_all(selector)
                         if len(entries):
-                            content = ' '.join([await entry.inner_html() for entry in entries])
+                            content = " ".join([await entry.inner_html() for entry in entries])
                     else:
                         content = await page.content()
                 except playWrightTimeoutError:
@@ -67,11 +67,7 @@ async def scrape_orgs(max_concurrence=5, timeout_s=15):
                 finally:
                     await page.close()
 
-                json_content = {
-                    'org': '_'.join(org.lower().split()),
-                    'url': url,
-                    'content': content
-                }
+                json_content = {"org": "_".join(org.lower().split()), "url": url, "content": content}
                 with open(f"{SCRAPE_DOWNLOAD_PATH}/{org}.json", "w") as fp:
                     json.dump(json_content, fp, ensure_ascii=False)
 
@@ -86,10 +82,11 @@ async def scrape_orgs(max_concurrence=5, timeout_s=15):
 
 
 @click.command(context_settings=dict(show_default=True))
-@click.option('--max-concurrence', default=5, help='max async jobs to run')
-@click.option('--timeout-s', default=15, help='timeout in seconds waiting for selector')
+@click.option("--max-concurrence", default=5, help="max async jobs to run")
+@click.option("--timeout-s", default=15, help="timeout in seconds waiting for selector")
 def run_scrape(max_concurrence, timeout_s):
     import asyncio
+
     asyncio.run(scrape_orgs(int(max_concurrence), float(timeout_s)))
 
 

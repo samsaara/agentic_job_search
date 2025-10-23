@@ -38,17 +38,11 @@ def _release_lock(retry_state):
 
 
 class CustomCrewLLM(BaseLLM):
-    def __init__(
-            self,
-            provider,
-            temperature: float = 0.1,
-            wait_between_requests_seconds:int = None
-    ):
+    def __init__(self, provider, temperature: float = 0.1, wait_between_requests_seconds: int = None):
         self.provider = provider
         self.temperature = temperature
         self.llm = CustomLLM(provider, temperature, wait_between_requests_seconds)
         super().__init__(model=self.llm.model_name, temperature=self.temperature)
-
 
     # retry(
     #         # Stop retrying after overall timeout
@@ -72,7 +66,7 @@ class CustomCrewLLM(BaseLLM):
             messages = [{"role": "user", "content": messages}]
 
         # add this flag to let the custom llm know that it was being called by agentic workflow
-        payload_kwargs = {'from_crew': True}
+        payload_kwargs = {"from_crew": True}
         if tools and self.supports_function_calling():
             payload_kwargs["tools"] = tools
 
@@ -92,9 +86,9 @@ class CustomCrewLLM(BaseLLM):
 class CustomLLM:
     def __init__(
         self,
-        provider:str = 'OPENROUTER',
-        temperature:float = 0.1,
-        wait_between_requests_seconds:int = 5,
+        provider: str = "OPENROUTER",
+        temperature: float = 0.1,
+        wait_between_requests_seconds: int = 5,
     ):
         self._provider = provider
         self.temperature = temperature
@@ -103,7 +97,7 @@ class CustomLLM:
 
         _prefix = bool(os.environ[f"{self.provider}_PREFIX"])
         _model_name = os.environ[f"{self.provider}_MODEL_NAME"]
-        self.model_name = f'{self.provider.lower()}/{_model_name}' if _prefix else _model_name
+        self.model_name = f"{self.provider.lower()}/{_model_name}" if _prefix else _model_name
 
     @property
     def provider(self):
@@ -117,19 +111,17 @@ class CustomLLM:
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
 
-        payload_kwargs.update({'stream': False, 'format': 'json', 'timeout': 300, 'temperature': self.temperature})
-        if payload_kwargs.pop('from_crew', False):
-            _ = payload_kwargs.pop('format')
+        payload_kwargs.update({"stream": False, "format": "json", "timeout": 300, "temperature": self.temperature})
+        if payload_kwargs.pop("from_crew", False):
+            _ = payload_kwargs.pop("format")
 
-        log.debug('calling llm...')
-        log.debug(f"{'/'*30}\n\n{messages}\n\n{'*'*30}")
+        log.debug("calling llm...")
+        log.debug(f"{'/' * 30}\n\n{messages}\n\n{'*' * 30}")
         if self.wait:
-            log.debug(f'sleeping for {self.wait} secs')
+            log.debug(f"sleeping for {self.wait} secs")
             sleep(self.wait)
         try:
-            resp = completion(
-                self.model_name, messages, **payload_kwargs
-            )
+            resp = completion(self.model_name, messages, **payload_kwargs)
         except APIConnectionError as e:
             log.exception(e)
             raise
@@ -140,5 +132,5 @@ class CustomLLM:
         llm_resp = resp.choices[0].message.content
         log.debug(f"Usage: {resp.usage.model_dump_json()}")
 
-        log.debug(f"{'+'*30}\n\n{llm_resp}\n\n{'-'*30}\n\n")
+        log.debug(f"{'+' * 30}\n\n{llm_resp}\n\n{'-' * 30}\n\n")
         return llm_resp
