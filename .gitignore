@@ -205,11 +205,12 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,visualstudiocode
 
 # Custom
+*.pkl
 logs.*
+orgs.yaml
+creds.yaml
 jobs.json
 jobs/
-orgs.yaml
-*.pkl
-crawl/
 notebooks/
-creds.yaml
+crawl/
+data/

@@ -6,12 +6,12 @@ Hola 👋!!! I created this pet project to play with [crewai](https://www.crewai
 
 ## How It Works
 
-1. Given a list of organizations, it scrapes job listings async and stores them locally under [src/scrape/crawl](src/scrape/crawl).
+1. Given a list of organizations, it scrapes job listings async and stores them locally under [data/crawl](data/crawl).
    - This is also done regardless of the approach (See [***Programmatic Job Search***](#programmatic-job-search) below)
 2. Use an agent to read the scraped content and extract job info related to your topic of interest from those blobs of text.
    - Option to run either synchronously or asynchronously.
    - You can use an LLM from a cloud provider that you have access to or that is running locally with ***ollama***.
-3. Store extracted job information for each organization under [src/scrape/jobs/](src/scrape/jobs/) as `jobs_<org>.json` and generate a final report as `final_jobs_report_<time>.json`
+3. Store extracted job information for each organization under [data/jobs/](data/jobs/) as `jobs_<org>.json` and generate a final report as `final_jobs_report_<time>.json`
    - You can add your own logic to tweak this further! Read these from pandas for further analysis or convert to markdown etc.
 
 ## Installation
@@ -100,8 +100,8 @@ If you wish to delete the scraped content, look at `cleanup_*` functions under [
 I am facing a few issues which need further digging:
 
 1. Unable to selectively override templates for agents.
-     - When used a custom `system_template` for `Agent`, crewai doesn't insert the `{'role': 'system', 'content': ...}` but instead and puts the content of system & response templates altogether under `{'role': 'user', 'content':...}`.
-    - I also was unable to overrride the response template as it doesn't showup even when providing it as an arguement to the agent. *I've observed this to be the leading cause to get blank/incorrect/hallucinated responses from (the free/less powerful) LLMs I've tested.
+     - When used a custom `system_template` for `Agent`, crewai doesn't insert the `{'role': 'system', 'content': ...}` but instead puts the content of system & response templates together under `{'role': 'user', 'content':...}`.
+    - I also was unable to override the response template as it doesn't showup even when providing it as an argument to the agent. _I've observed this to be the leading cause to get blank/incorrect/hallucinated responses from (the free/less powerful) LLMs I've tested_
 
 2. It's also not clear how to reliably control the no. of requests made to LLM with 'async kickoff'. Though `max_rpm` is exposed via `Crew` & `Agent`, the burst of calls that sometimes crewAI makes couldn't be controlled even when `max_rpm` set to `1`. One might have to use threading manually to lock and release over the LLM call method.
    - This might not be a problem, if you happen to have access to paid cloud provider. But for now, it's recommended to use the usual _sync_ kickoff if you use a free plan from providers like openrouter/AIML.

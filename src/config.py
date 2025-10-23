@@ -9,8 +9,8 @@ JOB_TOPIC = "Data Science or Machine/Deep Learning or NLP/LLMs or AI"
 
 PROVIDER_CREDENTIALS_PATH = Path("creds.yaml")
 SCRAPE_ORGS_PATH = Path("src/scrape/orgs.yaml")
-SCRAPE_DOWNLOAD_PATH = Path("src/scrape/crawl")
-JOBS_WRITE_PATH = Path("src/scrape/jobs")
+SCRAPE_DOWNLOAD_PATH = Path("data/crawl")
+JOBS_WRITE_PATH = Path("data/jobs/individual")
 
 for path in (SCRAPE_DOWNLOAD_PATH, JOBS_WRITE_PATH):
     path.mkdir(parents=True, exist_ok=True)
@@ -32,7 +32,7 @@ def get_logger(LOG_LEVEL="INFO"):
     return log
 
 
-log = get_logger('DEBUG')
+log = get_logger('INFO')
 
 
 def load_creds(provider):
