@@ -100,7 +100,7 @@ def store_jobs_info(model_dump):
 
 
 def store_final_jobs_report(results):
-    FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH}/final_jobs_report_{int(time())}.json"
+    FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH.parent}/final_jobs_report_{int(time())}.json"
     log.info(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
     with open(FINAL_REPORT_PATH, "w") as fl:
         json.dump(results, fl, ensure_ascii=False, indent=4)
