@@ -2,7 +2,6 @@ import asyncio
 import json
 from ast import literal_eval
 from typing import Any, Dict
-
 import click
 from pydantic import ValidationError
 
@@ -104,7 +103,11 @@ class ProgrammaticJobSearch:
                 messages = [self._system_msg, {"role": "user", "content": html_content}]
                 # We call the LLM without giving `org` & `url` to avoid hallucinations
                 # We add them back once the results are fetched.
-                model_dict.update(**self._call_llm(messages))
+                try:
+                    model_dict.update(**self._call_llm(messages))
+                except Exception as e:
+                    log.exception(f"Error fetching job info for org:{inp['org']}. Skipping it...")
+                    continue
             else:
                 log.warning(f"no HTML content found for org: {inp['org']}")
                 model_dict.update({"jobs": []})
