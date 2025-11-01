@@ -1,8 +1,8 @@
-import logging
 import os
+import yaml
+import logging
 from pathlib import Path
 
-import yaml
 
 # Change this to whatever you're interested in.
 JOB_TOPIC = "Data Science or Machine/Deep Learning or NLP/LLMs or AI"
@@ -10,9 +10,11 @@ JOB_TOPIC = "Data Science or Machine/Deep Learning or NLP/LLMs or AI"
 PROVIDER_CREDENTIALS_PATH = Path("creds.yaml")
 SCRAPE_ORGS_PATH = Path("src/scrape/orgs.yaml")
 SCRAPE_DOWNLOAD_PATH = Path("data/crawl")
-JOBS_WRITE_PATH = Path("data/jobs/individual")
+JOBS_PATH = Path("data/jobs")
+JOBS_WRITE_PATH = JOBS_PATH / "individual"
+FINAL_REPORT_PATH = JOBS_PATH / "final_reports"
 
-for path in (SCRAPE_DOWNLOAD_PATH, JOBS_WRITE_PATH):
+for path in (SCRAPE_DOWNLOAD_PATH, JOBS_WRITE_PATH, FINAL_REPORT_PATH):
     path.mkdir(parents=True, exist_ok=True)
 
 
@@ -32,7 +34,7 @@ def get_logger(LOG_LEVEL="INFO"):
     return log
 
 
-log = get_logger("INFO")
+log = get_logger("DEBUG")
 
 
 def load_creds(provider):

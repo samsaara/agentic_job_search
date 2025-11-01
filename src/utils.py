@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field
 
-from src.config import JOB_TOPIC, JOBS_WRITE_PATH, SCRAPE_DOWNLOAD_PATH, log
+from src.config import JOB_TOPIC, JOBS_WRITE_PATH, SCRAPE_DOWNLOAD_PATH, FINAL_REPORT_PATH, log
 from src.scrape.scrape import scrape_orgs
 
 
@@ -100,17 +100,18 @@ def store_jobs_info(model_dump):
 
 
 def store_final_jobs_report(results):
-    FINAL_REPORT_PATH = f"{JOBS_WRITE_PATH.parent}/final_jobs_report_{int(time())}.json"
-    log.info(f"writing final jobs report to '{FINAL_REPORT_PATH}'")
-    with open(FINAL_REPORT_PATH, "w") as fl:
+    path = FINAL_REPORT_PATH / f"{int(time())}.json"
+    log.info(f"writing final jobs report to '{path}'")
+    with open(path, "w") as fl:
         json.dump(results, fl, ensure_ascii=False, indent=4)
 
 
 def cleanup_reports():
     """delete generated job reports"""
     log.warning("deleting all job reports generated so far!")
-    rmtree(JOBS_WRITE_PATH)
-    JOBS_WRITE_PATH.mkdir(parents=True)
+    for path in (JOBS_WRITE_PATH, FINAL_REPORT_PATH):
+        rmtree(path)
+        path.mkdir(parents=True)
 
 
 def cleanup_crawled_content(delete_job_reports=True):
